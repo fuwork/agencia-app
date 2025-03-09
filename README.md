@@ -1,70 +1,113 @@
-# Getting Started with Create React App
+# Sistema de Gestão - React com Supabase
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de gestão para controle de clientes, agências e pagamentos, desenvolvido com React para o frontend e Supabase para o backend.
 
-## Available Scripts
+## Características
 
-In the project directory, you can run:
+- Design limpo e moderno com tema claro
+- Fonte Poppins para melhor legibilidade
+- Interface responsiva
+- CRUD completo para todas as entidades
+- Dashboard com estatísticas
+- Integração com Supabase
+- Validação de formulários
 
-### `npm start`
+## Entidades
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Clientes**: Gerenciamento de informações de clientes
+- **Agências**: Gerenciamento de agências
+- **Pagamentos**: Registro e controle de pagamentos vinculados a clientes e agências
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Tecnologias utilizadas
 
-### `npm test`
+- React 18
+- React Router v6
+- Supabase (Backend as a Service)
+- CSS personalizado
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Como executar o projeto
 
-### `npm run build`
+### Pré-requisitos
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js instalado
+- Conta no Supabase (gratuita)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Configuração do Supabase
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Crie uma conta no [Supabase](https://supabase.com/)
+2. Crie um novo projeto
+3. No SQL Editor, execute os scripts de criação de tabelas fornecidos no arquivo `src/services/supabase.js`
+4. Obtenha sua URL do projeto e chave anon key nas configurações do projeto
 
-### `npm run eject`
+### Instalação
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Clone o repositório
+2. Instale as dependências:
+   ```
+   npm install
+   ```
+3. Configure as credenciais do Supabase no arquivo `src/services/supabase.js`
+4. Inicie o servidor de desenvolvimento:
+   ```
+   npm start
+   ```
+5. Acesse a aplicação em `http://localhost:3000`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Estrutura do projeto
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
+project-root/
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+├── src/
+│   ├── components/
+│   │   ├── ui/
+│   │   │   ├── Button.jsx
+│   │   │   ├── Input.jsx
+│   │   │   ├── Card.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   └── Modal.jsx
+│   │   ├── cliente/
+│   │   │   ├── ClienteForm.jsx
+│   │   │   ├── ClienteList.jsx
+│   │   │   └── ClienteItem.jsx
+│   │   ├── agencia/
+│   │   │   ├── AgenciaForm.jsx
+│   │   │   ├── AgenciaList.jsx
+│   │   │   └── AgenciaItem.jsx
+│   │   └── pagamento/
+│   │       ├── PagamentoForm.jsx
+│   │       ├── PagamentoList.jsx
+│   │       └── PagamentoItem.jsx
+│   ├── pages/
+│   │   ├── Clientes.jsx
+│   │   ├── Agencias.jsx
+│   │   ├── Pagamentos.jsx
+│   │   ├── Dashboard.jsx
+│   │   └── NotFound.jsx
+│   ├── services/
+│   │   ├── supabase.js
+│   │   ├── clienteService.js
+│   │   ├── agenciaService.js
+│   │   └── pagamentoService.js
+│   ├── utils/
+│   │   ├── formatters.js
+│   │   └── validators.js
+│   ├── App.jsx
+│   ├── index.js
+│   └── styles.css
+├── package.json
+└── README.md
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Recursos da interface
 
-## Learn More
+- **Dashboard**: Visão geral com estatísticas
+- **Clientes**: Listagem, criação, edição e exclusão de clientes
+- **Agências**: Listagem, criação, edição e exclusão de agências
+- **Pagamentos**: Listagem, criação, edição e exclusão de pagamentos com filtros por status
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Personalização
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+O sistema utiliza variáveis CSS que podem ser facilmente personalizadas para alterar cores, fontes e outros aspectos visuais. Edite o arquivo `src/styles.css` para personalizar a aparência.

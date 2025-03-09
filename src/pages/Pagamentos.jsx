@@ -1,4 +1,4 @@
-// src/pages/Pagamentos.jsx
+// src/pages/Pagamentos.jsx - Versão corrigida
 import React, { useState, useEffect } from 'react';
 import { pagamentoService } from '../services/pagamentoService';
 import PagamentoList from '../components/pagamento/PagamentoList';
@@ -12,15 +12,17 @@ const Pagamentos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPagamento, setCurrentPagamento] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   
   const fetchPagamentos = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await pagamentoService.getAll();
       setPagamentos(data);
     } catch (error) {
       console.error('Erro ao carregar pagamentos:', error);
-      alert('Erro ao carregar a lista de pagamentos.');
+      setError('Erro ao carregar a lista de pagamentos.');
     } finally {
       setLoading(false);
     }
@@ -33,38 +35,42 @@ const Pagamentos = () => {
   const handleOpenModal = (pagamento = null) => {
     setCurrentPagamento(pagamento);
     setIsModalOpen(true);
+    setError(null);
   };
   
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurrentPagamento(null);
+    setError(null);
   };
   
   const handleSubmit = async (formData) => {
     setIsSubmitting(true);
+    setError(null);
     try {
       if (formData.id) {
         await pagamentoService.update(formData.id, formData);
       } else {
         await pagamentoService.create(formData);
       }
-      fetchPagamentos();
+      await fetchPagamentos();
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar pagamento:', error);
-      alert('Erro ao salvar pagamento.');
+      setError(`Erro ao salvar pagamento: ${error.message || 'Tente novamente mais tarde.'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
   
   const handleDelete = async (id) => {
+    setError(null);
     try {
       await pagamentoService.delete(id);
-      fetchPagamentos();
+      await fetchPagamentos();
     } catch (error) {
       console.error('Erro ao excluir pagamento:', error);
-      alert('Erro ao excluir pagamento.');
+      setError(`Erro ao excluir pagamento: ${error.message || 'Tente novamente mais tarde.'}`);
     }
   };
   
@@ -74,6 +80,8 @@ const Pagamentos = () => {
         <h1>Gerenciar Pagamentos</h1>
         <Button onClick={() => handleOpenModal()}>Novo Pagamento</Button>
       </div>
+      
+      {error && <div className="error-alert">{error}</div>}
       
       {loading ? (
         <div className="loading">Carregando pagamentos...</div>
@@ -91,6 +99,7 @@ const Pagamentos = () => {
         title={currentPagamento ? 'Editar Pagamento' : 'Novo Pagamento'}
         size="lg"
       >
+        {error && <div className="error-alert">{error}</div>}
         <PagamentoForm 
           pagamento={currentPagamento} 
           onSubmit={handleSubmit}

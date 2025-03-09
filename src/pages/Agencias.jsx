@@ -1,4 +1,4 @@
-// src/pages/Agencias.jsx
+// src/pages/Agencias.jsx - Versão corrigida
 import React, { useState, useEffect } from 'react';
 import { agenciaService } from '../services/agenciaService';
 import AgenciaList from '../components/agencia/AgenciaList';
@@ -12,15 +12,17 @@ const Agencias = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAgencia, setCurrentAgencia] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   
   const fetchAgencias = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await agenciaService.getAll();
       setAgencias(data);
     } catch (error) {
       console.error('Erro ao carregar agências:', error);
-      alert('Erro ao carregar a lista de agências.');
+      setError('Erro ao carregar a lista de agências.');
     } finally {
       setLoading(false);
     }
@@ -33,38 +35,42 @@ const Agencias = () => {
   const handleOpenModal = (agencia = null) => {
     setCurrentAgencia(agencia);
     setIsModalOpen(true);
+    setError(null);
   };
   
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurrentAgencia(null);
+    setError(null);
   };
   
   const handleSubmit = async (formData) => {
     setIsSubmitting(true);
+    setError(null);
     try {
       if (formData.id) {
         await agenciaService.update(formData.id, formData);
       } else {
         await agenciaService.create(formData);
       }
-      fetchAgencias();
+      await fetchAgencias();
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar agência:', error);
-      alert('Erro ao salvar agência.');
+      setError(`Erro ao salvar agência: ${error.message || 'Tente novamente mais tarde.'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
   
   const handleDelete = async (id) => {
+    setError(null);
     try {
       await agenciaService.delete(id);
-      fetchAgencias();
+      await fetchAgencias();
     } catch (error) {
       console.error('Erro ao excluir agência:', error);
-      alert('Erro ao excluir agência.');
+      setError(`Erro ao excluir agência: ${error.message || 'Tente novamente mais tarde.'}`);
     }
   };
   
@@ -74,6 +80,8 @@ const Agencias = () => {
         <h1>Gerenciar Agências</h1>
         <Button onClick={() => handleOpenModal()}>Nova Agência</Button>
       </div>
+      
+      {error && <div className="error-alert">{error}</div>}
       
       {loading ? (
         <div className="loading">Carregando agências...</div>
@@ -90,6 +98,7 @@ const Agencias = () => {
         onClose={handleCloseModal}
         title={currentAgencia ? 'Editar Agência' : 'Nova Agência'}
       >
+        {error && <div className="error-alert">{error}</div>}
         <AgenciaForm 
           agencia={currentAgencia} 
           onSubmit={handleSubmit}

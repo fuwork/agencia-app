@@ -1,4 +1,4 @@
-// src/services/agenciaService.js
+// src/services/agenciaService.js - Versão corrigida
 import { supabase } from './supabase';
 
 export const agenciaService = {
@@ -9,7 +9,7 @@ export const agenciaService = {
       .order('nome');
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
   
   async getById(id) {
@@ -30,6 +30,10 @@ export const agenciaService = {
       .select();
     
     if (error) throw error;
+    // Verificar se data existe e tem pelo menos um item
+    if (!data || data.length === 0) {
+      throw new Error('Erro ao criar agência: Nenhum dado retornado');
+    }
     return data[0];
   },
   
@@ -41,6 +45,10 @@ export const agenciaService = {
       .select();
     
     if (error) throw error;
+    // Verificar se data existe e tem pelo menos um item
+    if (!data || data.length === 0) {
+      throw new Error('Erro ao atualizar agência: Nenhum dado retornado');
+    }
     return data[0];
   },
   

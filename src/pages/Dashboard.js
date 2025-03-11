@@ -12,7 +12,8 @@ const Dashboard = () => {
     totalPagamentos: 0,
     valorTotalPagamentos: 0,
     pagamentosPendentes: 0,
-    pagamentosConcluidos: 0
+    pagamentosConcluidos: 0,
+    ContratosVencidos: 0
   });
   
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,7 @@ const Dashboard = () => {
   
   return (
     <div className="dashboard">
-      <h1>Dashboard</h1>
+      <h1>Home</h1>
       
       <div className="stats-grid">
         <Card title="Clientes" className="stat-card">
@@ -70,6 +71,11 @@ const Dashboard = () => {
         <Card title="Pagamentos" className="stat-card">
           <div className="stat-value">{stats.totalPagamentos}</div>
           <div className="stat-label">Total de pagamentos</div>
+        </Card>
+
+        <Card title="Contratos Vencidos" className="stat-card">
+          <div className="stat-value">{stats.ContratosVencidos}</div>
+          <div className="stat-label">Contratos Vencidos</div>
         </Card>
         
         <Card title="Valor Total" className="stat-card">

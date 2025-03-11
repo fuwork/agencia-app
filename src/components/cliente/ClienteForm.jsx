@@ -112,7 +112,7 @@ const ClienteForm = ({ cliente = {}, onSubmit, isLoading = false }) => {
       
       <div className="form-actions">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : cliente.id ? 'Atualizar' : 'Cadastrar'}
+          {isLoading ? 'Salvando...' : cliente?.id ? 'Atualizar' : 'Cadastrar'}
         </Button>
       </div>
     </form>

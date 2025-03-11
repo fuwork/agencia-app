@@ -104,7 +104,7 @@ const AgenciaForm = ({ agencia = {}, onSubmit, isLoading = false }) => {
       
       <div className="form-actions">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : agencia.id ? 'Atualizar' : 'Cadastrar'}
+          {isLoading ? 'Salvando...' : agencia?.id ? 'Atualizar' : 'Cadastrar'}
         </Button>
       </div>
     </form>

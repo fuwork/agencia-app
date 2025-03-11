@@ -10,4 +10,15 @@ const Card = ({ title, children, className = '' }) => {
   );
 };
 
+const CardContent = React.forwardRef(({ className = '', children, ...props }, ref) => (
+  <div ref={ref} className={`card-content ${className}`} {...props}>
+    {children}
+  </div>
+));
+CardContent.displayName = "CardContent";
+
+// Manter export default para compatibilidade com código existente
 export default Card;
+
+// Adicionar exports nomeados para novos componentes
+export { Card, CardContent };

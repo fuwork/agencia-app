@@ -193,7 +193,7 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
       
       <div className="form-actions">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : pagamento.id ? 'Atualizar' : 'Cadastrar'}
+          {isLoading ? 'Salvando...' : pagamento?.id ? 'Atualizar' : 'Cadastrar'}
         </Button>
       </div>
     </form>

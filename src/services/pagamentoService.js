@@ -1,4 +1,4 @@
-// src/services/pagamentoService.js
+// src/services/pagamentoService.js - Versão corrigida
 import { supabase } from './supabase';
 
 export const pagamentoService = {
@@ -13,7 +13,7 @@ export const pagamentoService = {
       .order('data_pagamento', { ascending: false });
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
   
   async getById(id) {
@@ -38,6 +38,10 @@ export const pagamentoService = {
       .select();
     
     if (error) throw error;
+    // Verificar se data existe e tem pelo menos um item
+    if (!data || data.length === 0) {
+      throw new Error('Erro ao criar pagamento: Nenhum dado retornado');
+    }
     return data[0];
   },
   
@@ -49,6 +53,10 @@ export const pagamentoService = {
       .select();
     
     if (error) throw error;
+    // Verificar se data existe e tem pelo menos um item
+    if (!data || data.length === 0) {
+      throw new Error('Erro ao atualizar pagamento: Nenhum dado retornado');
+    }
     return data[0];
   },
   

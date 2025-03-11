@@ -555,3 +555,58 @@ body {
     gap: 1.5rem;
   }
 }
+
+
+.error-alert {
+    background-color: #fee2e2;
+    border: 1px solid #f87171;
+    color: #b91c1c;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+
+  /* Adicione ao arquivo src/styles.css */
+
+.app-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f9fafb;
+  }
+  
+  .loading-container {
+    text-align: center;
+    padding: 2rem;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 500px;
+  }
+  
+  .loading-container h2 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+  }
+  
+  .connection-error {
+    background-color: #fee2e2;
+    border: 1px solid #f87171;
+    color: #b91c1c;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    margin: 0 1rem 2rem 1rem;
+  }
+  
+  .connection-error h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #b91c1c;
+  }
+  
+  .connection-error p {
+    margin: 0.5rem 0;
+  }

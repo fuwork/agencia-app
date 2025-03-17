@@ -1,6 +1,6 @@
 // src/components/agencia/AgenciaForm.jsx
 import React, { useState, useEffect } from 'react';
-import Input from '../ui/Input';
+import Input from '../ui/Inputt';
 import Button from '../ui/Button';
 
 const AgenciaForm = ({ agencia = {}, onSubmit, isLoading = false }) => {

@@ -1,6 +1,5 @@
 // src/components/ui/Modal.jsx
 import React, { useEffect } from 'react';
-import Button from './Button';
 
 const Modal = ({ 
   isOpen, 

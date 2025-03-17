@@ -1,44 +1,36 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from './components/ui/Navbar';
-import Dashboard from './pages/Dashboard';
-import Clientes from './pages/Clientes';
-import Agencias from './pages/Agencias';
-import Pagamentos from './pages/Pagamentos';
-import NotFound from './pages/NotFound';
-import './styles.css';
-import Agendamentos from './pages/agendamentos';
+import { Switch, Route, Redirect } from "react-router-dom";
+import Home from "./pages/Home";
+import Agenda from "./pages/Agendamento/Calendario";
+import SignIn from "./pages/SignIn";
+import Clientes from "./pages/Clientes";
+import pagamentos from "./pages/Pagamentos";
+import Main from "./components/layout/Main";
+import "antd/dist/antd.css";
+import "./assets/styles/main.css";
+import "./assets/styles/responsive.css";
+import './pages/Agendamento/components/Components-Calendario-css.css';
+import './styles/styles.css';
 
 
-//const logoPath = "/images/fuwork.png";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
-const App = () => {
+function App() {
   return (
-    <Router>
-      <div className="app">
-        <Navbar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/agencias" element={<Agencias />} />
-            <Route path="/pagamentos" element={<Pagamentos />} />
-            <Route path="/agendamentos" element={<Agendamentos />} />
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" />} />
-          </Routes>
-        </main>
-        <footer className="footer">
-          <div className="container">
-            <div className="flex items-center justify-center">
-              
-              <p>&copy; {new Date().getFullYear()} - <b>Fuwork</b> Todos os direitos reservados.</p>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </Router>
+    <div className="App">
+      <Switch>
+        <Route path="/sign-in" exact component={SignIn} />
+        <Main>
+          <Route exact path="/dashboard" component={Home} />
+          <Route exact path="/pagamentos" component={pagamentos} />
+          <Route exact path="/Clientes" component={Clientes} />
+          <Route exact path="/Agenda" component={Agenda} />
+          <Redirect from="*" to="/dashboard" />
+        </Main>
+      </Switch>
+    </div>
   );
-};
+}
 
 export default App;

@@ -55,7 +55,7 @@ const UserProfile = () => {
     </div>
   );
   
-  const profile = <span className="profile-icon">👤 </span>; // Substitua por seu ícone
+ // const profile = <span className="profile-icon">👤 </span>;
   
   const handleClick = (e) => {
     if (user) {

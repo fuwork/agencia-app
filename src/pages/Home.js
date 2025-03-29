@@ -2,41 +2,24 @@ import { useState, useEffect } from "react";
 import { clienteService } from '../services/clienteService';
 import { agenciaService } from '../services/agenciaService';
 import { pagamentoService } from '../services/pagamentoService';
+import { supabase } from '../services/supabase';
 
-import {
-  Card,
-  Col,
-  Row,
-  Typography,
-  Tooltip,
-  Progress,
-  Upload,
-  message,
-  Button,
-  Timeline,
-} from "antd";
-import {
-  MenuUnfoldOutlined,
-} from "@ant-design/icons";
+import {Card, Col, Row, Typography, Button, Timeline,} from "antd";
+import { MenuUnfoldOutlined,} from "@ant-design/icons";
 import Paragraph from "antd/lib/typography/Paragraph";
 
 import Echart from "../components/chart/EChart";
 import LineChart from "../components/chart/LineChart";
 
-import ava1 from "../assets/images/logo-shopify.svg";
-import ava2 from "../assets/images/logo-atlassian.svg";
-import ava3 from "../assets/images/logo-slack.svg";
-import ava4 from "../assets/images/logo-spotify.svg";
-import ava5 from "../assets/images/logo-jira.svg";
-import ava6 from "../assets/images/logo-invision.svg";
-import team1 from "../assets/images/team-1.jpg";
-import team2 from "../assets/images/team-2.jpg";
-import team3 from "../assets/images/team-3.jpg";
-import team4 from "../assets/images/team-4.jpg";
-
 
 function Home() {
+  const [campanhas, setCampanhas] = useState([])
+  const [clientesAgrupados, setClientesAgrupados] = useState([])
+  const [carteiras, setCarteiras] = useState({})
+  const [cliente, setCliente] = useState(null)
+  const [clientesList, setClientesList] = useState([])
   const { Title, Text } = Typography;
+  const [erro, setErro] = useState(null)
 
   const [stats, setStats] = useState({
     totalClientes: 0,
@@ -48,7 +31,117 @@ function Home() {
     ContratosVencidos: 0,
   });
 
+  // Função para formatar valor monetário
+  const formatarMoeda = (valor) => {
+    return valor?.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }) || 'R$ 0,00'
+  }
+
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Buscar lista de clientes primeiro
+    const fetchInitialData = async () => {
+      try {
+        const clientesData = await clienteService.getAll();
+        setClientesList(clientesData);
+        
+        // Se tiver clientes, seleciona o primeiro para exibir seus dados
+        if (clientesData && clientesData.length > 0) {
+          setCliente(clientesData[0]);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados iniciais:', error);
+        setErro(error.message);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchAllCampanhasAndCarteiras = async () => {
+      setLoading(true);
+      setErro(null);
+      try {
+        // Buscar todas as campanhas
+        const { data: campanhasData, error: campanhasError } = await supabase
+          .from('campanhas')
+          .select(`
+            ad_id,
+            campaign_id,
+            date_start,
+            date_stop,
+            client_id,
+            spend,
+            reach,
+            clicks,
+            cpm,
+            ctr,
+            unique_clicks,
+            impressions,
+            clientes:client_id (
+              id,
+              nome,
+              codigo,
+              ativo
+            )
+          `);
+        
+        if (campanhasError) throw campanhasError;
+        
+        // Buscar todas as carteiras
+        const { data: carteirasData, error: carteirasError } = await supabase
+          .from('carteira')
+          .select('*');
+        
+        if (carteirasError) throw carteirasError;
+        
+        // Criar mapa de carteiras por cliente_id para fácil acesso
+        const carteirasMap = {};
+        carteirasData.forEach(carteira => {
+          carteirasMap[carteira.cliente_id] = carteira;
+        });
+        
+        // Agrupar campanhas por cliente
+        const clientesMap = {};
+        
+        campanhasData.forEach(campanha => {
+          const clientId = campanha.client_id;
+          
+          if (!clientesMap[clientId]) {
+            clientesMap[clientId] = {
+              id: clientId,
+              nome: campanha.clientes?.nome || 'N/A',
+              codigo: campanha.clientes?.codigo || 'N/A',
+              ativo: campanha.clientes?.ativo || false,
+              campanhas: [],
+              totalGasto: 0
+            };
+          }
+          
+          clientesMap[clientId].campanhas.push(campanha);
+          clientesMap[clientId].totalGasto += parseFloat(campanha.spend) || 0;
+        });
+        
+        // Converter o mapa em array
+        const clientesAgrupados = Object.values(clientesMap);
+        
+        setCampanhas(campanhasData || []);
+        setClientesAgrupados(clientesAgrupados);
+        setCarteiras(carteirasMap);
+      } catch (error) {
+        console.error('Erro ao buscar campanhas e carteiras:', error);
+        setErro(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAllCampanhasAndCarteiras();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,9 +167,6 @@ function Home() {
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
       }
-     finally {
-      setLoading(false);
-    }
     };
   
     fetchData();
@@ -199,131 +289,9 @@ function Home() {
         style: 'currency',
         currency: 'BRL',
       }),
-      persent: "", // Você pode ajustar isso conforme necessário
+      persent: "",
       icon: dollor,
       bnb: "bnb2",
-    },
-  ];
-
-  const list = [
-    {
-      img: ava1,
-      Title: "Soft UI Shopify Version",
-      bud: "R$ 14.000,00",
-      progress: <Progress percent={60} size="small" />,
-      member: (
-        <div className="avatar-group mt-2">
-          <Tooltip placement="bottom" title="Ryan Tompson">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Romina Hadid">
-            <img className="tootip-img" src={team2} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Alexander Smith">
-            <img className="tootip-img" src={team3} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Jessica Doe">
-            <img className="tootip-img" src={team4} alt="" />
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
-      img: ava2,
-      Title: "Progress Track",
-      bud: "R$ 3.000,00",
-      progress: <Progress percent={10} size="small" />,
-      member: (
-        <div className="avatar-group mt-2">
-          <Tooltip placement="bottom" title="Ryan Tompson">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Romina Hadid">
-            <img className="tootip-img" src={team2} alt="" />
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
-      img: ava3,
-      Title: "Fix Platform Errors",
-      bud: "Pendente",
-      progress: <Progress percent={100} size="small" status="active" />,
-      member: (
-        <div className="avatar-group mt-2">
-          <Tooltip placement="bottom" title="Ryan Tompson">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Romina Hadid">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Alexander Smith">
-            <img className="tootip-img" src={team3} alt="" />
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
-      img: ava4,
-      Title: "Launch new Mobile App",
-      bud: "R$ 20.600,00",
-      progress: <Progress percent={100} size="small" status="active" />,
-      member: (
-        <div className="avatar-group mt-2">
-          <Tooltip placement="bottom" title="Ryan Tompson">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Romina Hadid">
-            <img className="tootip-img" src={team2} alt="" />
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
-      img: ava5,
-      Title: "Add the New Landing Page",
-      bud: "R$ 4.000,00",
-      progress: <Progress percent={80} size="small" />,
-      member: (
-        <div className="avatar-group mt-2">
-          <Tooltip placement="bottom" title="Ryan Tompson">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Romina Hadid">
-            <img className="tootip-img" src={team2} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Alexander Smith">
-            <img className="tootip-img" src={team3} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Jessica Doe">
-            <img className="tootip-img" src={team4} alt="" />
-          </Tooltip>
-        </div>
-      ),
-    },
-
-    {
-      img: ava6,
-      Title: "Redesign Online Store",
-      bud: "R$ 2.000,00",
-      progress: (
-        <Progress
-          percent={100}
-          size="small"
-          status="exception"
-          format={() => "Cancel"}
-        />
-      ),
-      member: (
-        <div className="avatar-group mt-2">
-          <Tooltip placement="bottom" title="Ryan Tompson">
-            <img className="tootip-img" src={team1} alt="" />
-          </Tooltip>
-          <Tooltip placement="bottom" title="Romina Hadid">
-            <img className="tootip-img" src={team2} alt="" />
-          </Tooltip>
-        </div>
-      ),
     },
   ];
 
@@ -357,23 +325,10 @@ function Home() {
     },
   ];
 
-  const uploadProps = {
-    name: "file",
-    action: "https://www.mocky.io/v2/5cc8019d300000980a055e76",
-    headers: {
-      authorization: "authorization-text",
-    },
-    onChange(info) {
-      if (info.file.status !== "uploading") {
-        console.log(info.file, info.fileList);
-      }
-      if (info.file.status === "done") {
-        message.success(`${info.file.name} file uploaded successfully`);
-      } else if (info.file.status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-  };
+  // Calcular o total gasto em todas as campanhas
+  const totalGastoGeral = clientesAgrupados.reduce((total, cliente) => {
+    return total + cliente.totalGasto;
+  }, 0);
 
   return (
     <>
@@ -428,7 +383,7 @@ function Home() {
                 <div>
                   <Title level={5}>Clientes</Title>
                   <Paragraph className="lastweek">
-
+                    {loading ? "Carregando..." : erro ? `Erro: ${erro}` : ""}
                   </Paragraph>
                 </div>
                 <div className="ant-filtertabs">
@@ -441,50 +396,69 @@ function Home() {
                 <table className="width-100">
                   <thead>
                     <tr>
-                      <th>AGENCIA</th>
-                      <th>RESPONSAVEL</th>
-                      <th>BUDGET</th>
+                      <th>CLIENTE</th>
+                      <th>CRÉDITO</th>
+                      <th>TOTAL GASTO</th>
+                      <th>CAMPANHAS</th>
+                      <th>CAMPANHAS ATIVAS</th>
                       <th>STATUS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((d, index) => (
-                      <tr key={index}>
-                        <td>
-                          <h6>
-                            <img
-                              src={d.img}
-                              alt=""
-                              className="avatar-sm mr-10"
-                            />{" "}
-                            {d.Title}
-                          </h6>
-                        </td>
-                        <td>{d.member}</td>
-                        <td>
-                          <span className="text-xs font-weight-bold">
-                            {d.bud}{" "}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="percent-progress">{d.progress}</div>
-                        </td>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="6">Carregando...</td>
                       </tr>
-                    ))}
+                    ) : erro ? (
+                      <tr>
+                        <td colSpan="6">Erro ao carregar dados: {erro}</td>
+                      </tr>
+                    ) : clientesAgrupados.length > 0 ? (
+                      clientesAgrupados.map((cliente, index) => {
+                        // Filtrar campanhas ativas
+                        const campanhasAtivas = cliente.campanhas.filter(campanha => {
+                          const hoje = new Date();
+                          const dataFim = campanha.date_stop ? new Date(campanha.date_stop) : null;
+                          
+                          // Considera a campanha ativa se não tem data de término ou se a data é futura
+                          return !dataFim || dataFim > hoje;
+                        });
+                        
+                        return (
+                          <tr key={index}>
+                            <td>{cliente.nome}</td>
+                            <td>{formatarMoeda(carteiras[cliente.id]?.credito || 0)}</td>
+                            <td>{formatarMoeda(cliente.totalGasto)}</td>
+                            <td>{cliente.campanhas.length}</td>
+                            <td>{campanhasAtivas.length}</td>
+                            <td>{cliente.ativo ? "Ativo" : "Inativo"}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="6">Nenhum dado disponível</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-              <div className="uploadfile shadow-none">
-                <Upload {...uploadProps}>
-                 
-                </Upload>
-              </div>
+              {/*<div className="uploadfile shadow-none">
+                {!loading && !erro && (
+                  <div>
+                    <p>Total gasto em campanhas: {formatarMoeda(totalGastoGeral)}</p>
+                    <p>Crédito total disponível: {formatarMoeda(
+                      Object.values(carteiras).reduce((total, carteira) => total + (carteira.credito || 0), 0)
+                    )}</p>
+                  </div>
+                )}
+              </div> */}
             </Card>
           </Col>
           <Col xs={24} sm={24} md={12} lg={12} xl={8} className="mb-24">
             <Card bordered={false} className="criclebox h-full">
               <div className="timeline-box">
-                <Title level={5}>Historico</Title>
+                <Title level={5}>Histórico</Title>
                 <Paragraph className="lastweek" style={{ marginBottom: 24 }}>
 
                 </Paragraph>

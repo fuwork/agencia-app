@@ -96,15 +96,25 @@ export default function CampanhasModal({ show, onHide, clientes }) {
     return dataTermino > hoje
   }
 
-  // Função para obter badge de status
-  const getStatusBadge = (dataFim, creditoCarteira) => {
-    const ativa = isAtiva(dataFim, creditoCarteira)
-    return ativa ? 
-      <Badge bg="success">Ativa</Badge> : 
-      <Badge bg="secondary">Inativa</Badge>
-  }
+// Função para obter badge de status
+const getStatusBadge = (dataFim, creditoCarteira) => {
+  const hoje = new Date();
+  
+  const dataTermino = typeof dataFim === 'string' ? new Date(dataFim) : dataFim;
+  
+  // Verifica se a data de término já passou E se o crédito é maior que zero
+  const dataExpirada = dataTermino && dataTermino < hoje;
+  const semCredito = creditoCarteira <= 0;
+  
+  // Está ativa apenas se tiver crédito E a data não estiver expirada
+  const ativa = !semCredito && !dataExpirada;
+  
+  return ativa ? 
+    <Badge bg="success">Ativa</Badge> : 
+    <Badge bg="secondary">Inativa</Badge>
+}
 
-  // Função para aplicar os filtros - VERSÃO CORRIGIDA
+  // Função para aplicar os filtros 
   const aplicarFiltros = () => {
     if (!campanhas.length) return
     
@@ -329,7 +339,7 @@ export default function CampanhasModal({ show, onHide, clientes }) {
                         </td>
                         <td>
                           {formatarMoeda(parseFloat(campanha.spend))}
-                          {carteira.credito < 20 && (
+                          {carteira.credito < 10 && (
                             <span className="ms-2 text-danger">
                               (Saldo Baixo)
                             </span>

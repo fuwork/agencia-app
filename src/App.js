@@ -5,6 +5,7 @@ import SignIn from "./pages/SignIn";
 import Clientes from "./pages/Clientes";
 import pagamentos from "./pages/Pagamentos";
 import Main from "./components/layout/Main";
+import Controle from "./pages/ControleAD";
 import "antd/dist/antd.css";
 import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
@@ -26,6 +27,7 @@ function App() {
           <Route exact path="/pagamentos" component={pagamentos} />
           <Route exact path="/Clientes" component={Clientes} />
           <Route exact path="/Agenda" component={Agenda} />
+          <Route exact path="/ControleAD" component={Controle} />
           <Redirect from="*" to="/dashboard" />
         </Main>
       </Switch>

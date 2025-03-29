@@ -610,3 +610,13 @@ body {
   .connection-error p {
     margin: 0.5rem 0;
   }
+
+  /*Remove sublinhado do menu*/
+  .ant-menu-item a {
+    text-decoration: none !important;
+  }
+  
+  /* Opcional: remover sublinhado quando hover */
+  .ant-menu-item a:hover {
+    text-decoration: none !important;
+  }

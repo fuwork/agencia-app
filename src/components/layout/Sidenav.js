@@ -1,7 +1,7 @@
 // import { useState } from "react";
 import { Menu} from "antd";
 import { NavLink, useLocation } from "react-router-dom";
-import logo from "../../assets/images/icon fuwork.jpeg";
+import logo from "../../assets/images/Logo Fuwork front.png";
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
@@ -135,13 +135,13 @@ function Sidenav({ color }) {
         <span>Fuwork</span>
       </div>
       <hr />
-      <Menu theme="light" mode="inline">
+      <Menu theme="light" >
         <Menu.Item key="1">
           <NavLink to="/dashboard">
             <span
               className="icon"
               style={{
-                background: page === "dashboard" ? color : "",
+                background: page === "dashboard" ? color : "", 
               }}
             >
               {dashboard}
@@ -190,7 +190,7 @@ function Sidenav({ color }) {
         </Menu.Item>
 
         <Menu.Item key="5">
-          <NavLink to="/Relatorio">
+          <NavLink to="/ControleAD">
             <span
               className="icon"
               style={{
@@ -199,7 +199,7 @@ function Sidenav({ color }) {
             >
               {profile}
             </span>
-            <span className="label">Relatorio</span>
+            <span className="label">Controle de Campanha</span>
           </NavLink>
         </Menu.Item>
         <Menu.Item key="6">

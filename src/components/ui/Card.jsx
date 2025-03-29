@@ -1,24 +1,29 @@
-// src/components/ui/Card.jsx
 import React from 'react';
 
-const Card = ({ title, children, className = '' }) => {
-  return (
-    <div className={`card ${className}`}>
-      {title && <div className="card-header">{title}</div>}
-      <div className="card-body">{children}</div>
-    </div>
-  );
-};
-
-const CardContent = React.forwardRef(({ className = '', children, ...props }, ref) => (
-  <div ref={ref} className={`card-content ${className}`} {...props}>
+// Componente Card básico
+export const Card = ({ children, className = '' }) => (
+  <div className={`border rounded-lg shadow-md ${className}`}>
     {children}
   </div>
-));
-CardContent.displayName = "CardContent";
+);
 
-// Manter export default para compatibilidade com código existente
-export default Card;
+// Cabeçalho do Card
+export const CardHeader = ({ children, className = '' }) => (
+  <div className={`p-4 border-b ${className}`}>
+    {children}
+  </div>
+);
 
-// Adicionar exports nomeados para novos componentes
-export { Card, CardContent };
+// Título do Card
+export const CardTitle = ({ children, className = '' }) => (
+  <h2 className={`text-xl font-semibold ${className}`}>
+    {children}
+  </h2>
+);
+
+// Conteúdo do Card
+export const CardContent = ({ children, className = '' }) => (
+  <div className={`p-4 ${className}`}>
+    {children}
+  </div>
+);

@@ -1,8 +1,5 @@
-// src/components/ui/Modal.jsx
 import React, { useEffect } from 'react';
 
-// Estilos inline para garantir que o modal funcione corretamente
-// Você pode mover esses estilos para um arquivo CSS separado depois
 const styles = {
   modalOverlay: {
     position: 'fixed',
@@ -21,21 +18,34 @@ const styles = {
     backgroundColor: 'white',
     borderRadius: '8px',
     width: 'auto',
-    minWidth: '300px',
+    minWidth: '400px', 
     maxHeight: '90vh',
     overflow: 'auto',
     position: 'relative',
     boxShadow: '0 5px 15px rgba(0, 0, 0, 0.5)',
     margin: '1.75rem auto'
   },
+  modalXs: {
+    maxWidth: '450px'
+  },
   modalSm: {
-    maxWidth: '400px'
+    maxWidth: '650px'
   },
   modalMd: {
-    maxWidth: '600px'
+    maxWidth: '850px' 
   },
   modalLg: {
-    maxWidth: '800px'
+    maxWidth: '95vw', 
+    width: '800px'   
+  },
+  modalXl: {
+    maxWidth: '95vw',
+    width: '800'   
+  },
+  modalFull: {
+    maxWidth: '95vw',
+    width: '95vw',
+    height: '95vh'
   },
   modalHeader: {
     display: 'flex',
@@ -46,23 +56,27 @@ const styles = {
   },
   modalTitle: {
     margin: 0,
-    fontSize: '1.25rem'
+    fontSize: '1.5rem', 
+    fontWeight: '600'
   },
   modalClose: {
     background: 'none',
     border: 'none',
-    fontSize: '24px',
+    fontSize: '28px', 
     cursor: 'pointer',
-    color: '#666'
+    color: '#666',
+    padding: '0 10px'
   },
   modalBody: {
-    padding: '20px'
+    padding: '25px', 
+    fontSize: '1.05rem' 
   },
   modalFooter: {
-    padding: '16px 20px',
+    padding: '20px',
     borderTop: '1px solid #eee',
     display: 'flex',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
+    gap: '10px' 
   }
 };
 
@@ -72,10 +86,9 @@ const Modal = ({
   title, 
   children, 
   footer,
-  size = 'md'
+  size = 'lg' 
 }) => {
   useEffect(() => {
-    // Impedir rolagem do body quando o modal estiver aberto
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -91,14 +104,16 @@ const Modal = ({
   
   const getSizeStyle = () => {
     switch (size) {
+      case 'xs': return styles.modalXs;
       case 'sm': return styles.modalSm;
       case 'md': return styles.modalMd;
       case 'lg': return styles.modalLg;
-      default: return styles.modalMd;
+      case 'xl': return styles.modalXl;
+      case 'full': return styles.modalFull;
+      default: return styles.modalLg; 
     }
   };
 
-  // Prevenindo propagação do clique para evitar que o modal feche quando clicar no conteúdo
   const handleModalContentClick = (e) => {
     e.stopPropagation();
   };
@@ -108,7 +123,9 @@ const Modal = ({
       <div style={{...styles.modal, ...getSizeStyle()}} onClick={handleModalContentClick}>
         <div style={styles.modalHeader}>
           <h3 style={styles.modalTitle}>{title}</h3>
-          <button style={styles.modalClose} onClick={onClose}>&times;</button>
+          <button style={styles.modalClose} onClick={onClose} aria-label="Fechar modal">
+            &times;
+          </button>
         </div>
         <div style={styles.modalBody}>{children}</div>
         {footer && <div style={styles.modalFooter}>{footer}</div>}

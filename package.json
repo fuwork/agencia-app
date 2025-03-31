@@ -21,6 +21,7 @@
     "clsx": "^2.1.0",
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7",
     "install": "^0.13.0",
     "lucide-react": "^0.484.0",
     "moment": "^2.30.1",

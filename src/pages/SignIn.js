@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { withRouter } from 'react-router-dom';
 import signinbg from "../assets/images/FUWORK.png";
-import { supabase } from '../services/supabase';
+import authService from '../services/authService'; // Importando o serviço de autenticação
 
 function onChange(checked) {
   console.log(`switch to ${checked}`);
@@ -25,27 +25,32 @@ class SignIn extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      errorMessage: '', // Estado para armazenar a mensagem de erro
+      errorMessage: '',
+      isLoading: false
     };
+  }
+
+  componentDidMount() {
+    // Limpa qualquer token existente ao carregar a página de login
+    localStorage.removeItem('authToken');
   }
 
   onFinish = async (values) => {
     const { email, password } = values;
+    this.setState({ isLoading: true, errorMessage: '' });
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        console.error('Erro ao fazer login:', error.message);
-        this.setState({ errorMessage: 'E-mail ou senha inválidos.' }); // Atualiza o estado com a mensagem de erro
-        return;
-      }
-
-      console.log('Usuário logado:', data.user);
-      this.props.history.push('/dashboard'); // Redireciona para a rota /dashboard
+      await authService.login(email, password);
+      this.props.history.push('/dashboard');
     } catch (error) {
       console.error('Erro ao fazer login:', error.message);
-      this.setState({ errorMessage: 'Ocorreu um erro ao tentar fazer login.' }); // Mensagem genérica para outros erros
+      this.setState({ 
+        errorMessage: error.message === 'Invalid login credentials'
+          ? 'E-mail ou senha inválidos.'
+          : 'Ocorreu um erro ao tentar fazer login.'
+      });
+    } finally {
+      this.setState({ isLoading: false });
     }
   };
 
@@ -54,7 +59,7 @@ class SignIn extends Component {
   };
 
   render() {
-    const { errorMessage } = this.state; // Acessa a mensagem de erro do estado
+    const { errorMessage, isLoading } = this.state;
 
     return (
       <>
@@ -70,7 +75,7 @@ class SignIn extends Component {
                 <Title className="font-regular text-muted" level={5}>
                   Digite seu e-mail e senha
                 </Title>
-                {errorMessage && ( // Exibe a mensagem de erro se existir
+                {errorMessage && (
                   <Text type="danger" style={{ display: 'block', marginBottom: 16 }}>
                     {errorMessage}
                   </Text>
@@ -88,8 +93,12 @@ class SignIn extends Component {
                     rules={[
                       {
                         required: true,
-                        message: "Porfavor, Digite seu e-mail!",
+                        message: "Por favor, digite seu e-mail!",
                       },
+                      {
+                        type: 'email',
+                        message: "Por favor, digite um e-mail válido!",
+                      }
                     ]}
                   >
                     <Input placeholder="Email" />
@@ -102,7 +111,7 @@ class SignIn extends Component {
                     rules={[
                       {
                         required: true,
-                        message: "Porfavor, Digite sua senha!",
+                        message: "Por favor, digite sua senha!",
                       },
                     ]}
                   >
@@ -123,8 +132,10 @@ class SignIn extends Component {
                       type="primary"
                       htmlType="submit"
                       style={{ width: "100%" }}
+                      loading={isLoading}
+                      disabled={isLoading}
                     >
-                      ENTRAR
+                      {isLoading ? 'AUTENTICANDO...' : 'ENTRAR'}
                     </Button>
                   </Form.Item>
                 </Form>

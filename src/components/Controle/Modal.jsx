@@ -19,7 +19,7 @@ export default function CampanhasModal({ show, onHide, clientes }) {
     if (show && clientes) {
       fetchCampanhas()
     }
-  }, [show, clientes])
+  }, [show, clientes,])
 
   // Efeito para aplicar os filtros quando mudam
   useEffect(() => {

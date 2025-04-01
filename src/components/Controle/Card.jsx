@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Card } from 'react-bootstrap'
-import { CurrencyDollar, Calendar } from 'react-bootstrap-icons'
+import { Calendar } from 'react-bootstrap-icons'
 import { supabase } from '../../services/supabase'
 import CampanhasModal from './Modal' // Importe o modal de campanhas
 
@@ -22,7 +22,7 @@ export default function AgencyCard() {
 
       // Buscar carteiras
       const { data: carteirasData, error: carteirasError } = await supabase
-        .from('carteiras')
+        .from('carteira')
         .select('*')
 
       // Buscar campanhas

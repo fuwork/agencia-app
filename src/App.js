@@ -13,7 +13,6 @@ import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
 import './pages/Agendamento/components/Components-Calendario-css.css';
 import './styles/styles.css';
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
@@ -41,51 +40,84 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    let isMounted = true; // Flag para controle de montagem
+
     const checkAuth = async () => {
       try {
-        // Verificar a sessão ativa do Supabase
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         
-        // Só consideramos autenticado se houver uma sessão válida
-        if (data.session) {
-          setIsAuthenticated(true);
-        } else {
-          // Se não há sessão, forçamos como não autenticado
-          setIsAuthenticated(false);
-          // Limpa qualquer token que possa estar no localStorage
-          localStorage.removeItem('authToken');
+        if (error) throw error;
+
+        if (isMounted) {
+          setIsAuthenticated(!!data.session);
+          if (data.session) {
+            localStorage.setItem('authToken', data.session.access_token);
+          } else {
+            localStorage.removeItem('authToken');
+          }
         }
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
-        setIsAuthenticated(false);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          localStorage.removeItem('authToken');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     checkAuth();
 
-    // Configurar listener para mudanças de estado de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          localStorage.setItem('authToken', session.access_token);
-          setIsAuthenticated(true);
-        } else if (event === 'SIGNED_OUT') {
-          localStorage.removeItem('authToken');
-          setIsAuthenticated(false);
+      async (event, session) => {
+        if (!isMounted) return;
+        
+        switch (event) {
+          case 'SIGNED_IN':
+            localStorage.setItem('authToken', session.access_token);
+            setIsAuthenticated(true);
+            break;
+          case 'SIGNED_OUT':
+            localStorage.removeItem('authToken');
+            setIsAuthenticated(false);
+            break;
+          case 'TOKEN_REFRESHED':
+            if (session) {
+              localStorage.setItem('authToken', session.access_token);
+            }
+            break;
         }
       }
     );
 
     return () => {
-      if (authListener && authListener.subscription) {
+      isMounted = false;
+      if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
       }
     };
   }, []);
 
-  // Enquanto estiver carregando, pode mostrar um indicador de carregamento
+  // Função para lidar com login bem-sucedido
+  const handleLoginSuccess = (session) => {
+    localStorage.setItem('authToken', session.access_token);
+    setIsAuthenticated(true);
+  };
+
+  // Função para logout
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('authToken');
+      setIsAuthenticated(false);
+      return true;
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      return false;
+    }
+  };
+
   if (isLoading) {
     return <div className="loading">Carregando aplicação...</div>;
   }
@@ -96,7 +128,11 @@ function App() {
         <Route 
           path="/sign-in" 
           render={(props) => 
-            isAuthenticated ? <Redirect to="/dashboard" /> : <SignIn {...props} />
+            isAuthenticated ? (
+              <Redirect to="/dashboard" />
+            ) : (
+              <SignIn {...props} onLoginSuccess={handleLoginSuccess} />
+            )
           } 
         />
         
@@ -136,9 +172,8 @@ function App() {
           isLoading={isLoading}
         />
         
-        {/* Redireciona para sign-in para qualquer rota não definida */}
         <Route path="*">
-          <Redirect to="/sign-in" />
+          {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/sign-in" />}
         </Route>
       </Switch>
     </div>

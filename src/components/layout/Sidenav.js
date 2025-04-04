@@ -1,13 +1,13 @@
-// import { useState } from "react";
-import { Menu} from "antd";
-import { NavLink, useLocation } from "react-router-dom";
+import { Menu, Modal } from "antd";
+import { NavLink, useLocation, withRouter } from "react-router-dom";
 import logo from "../../assets/images/Logo Fuwork front.png";
+import { supabase } from "../../services/supabase";
 
-function Sidenav({ color }) {
+function Sidenav({ color, history }) {
   const { pathname } = useLocation();
   const page = pathname.replace("/", "");
 
-  const dashboard = [
+	const dashboard = [
     <svg
       width="20"
       height="20"
@@ -74,24 +74,6 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
-  const Agenda = [
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      key={0}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M3 6C3 4.34315 4.34315 3 6 3H16C16.3788 3 16.725 3.214 16.8944 3.55279C17.0638 3.89157 17.0273 4.29698 16.8 4.6L14.25 8L16.8 11.4C17.0273 11.703 17.0638 12.1084 16.8944 12.4472C16.725 12.786 16.3788 13 16 13H6C5.44772 13 5 13.4477 5 14V17C5 17.5523 4.55228 18 4 18C3.44772 18 3 17.5523 3 17V6Z"
-        fill={color}
-      ></path>
-    </svg>,
-  ];
-
   const profile = [
     <svg
       width="20"
@@ -118,6 +100,7 @@ function Sidenav({ color }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       key={0}
+      
     >
       <path
         fillRule="evenodd"
@@ -127,6 +110,36 @@ function Sidenav({ color }) {
       ></path>
     </svg>,
   ];
+  
+  const logoutIcon = [
+    <i className="bi bi-box-arrow-right" style={{ fontSize: '20px', color }} />
+  ];
+
+  const handleLogout = () => {
+    Modal.confirm({
+      title: 'Sair do Sistema',
+      content: 'Tem certeza que deseja sair?',
+      okText: 'Sair',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          const { error } = await supabase.auth.signOut();
+          
+          if (error) throw error;
+
+          localStorage.removeItem('authToken');
+          
+          history.push('/sign-in');
+          
+          window.location.reload();
+        } catch (error) {
+          console.error('Erro ao fazer logout:', error);
+        }
+      }
+    });
+  };
+
+  const hoverColor = "#1890ff";
 
   return (
     <>
@@ -135,13 +148,13 @@ function Sidenav({ color }) {
         <span>Fuwork</span>
       </div>
       <hr />
-      <Menu theme="light" >
+      <Menu theme="light" mode="inline">
         <Menu.Item key="1">
           <NavLink to="/dashboard">
             <span
               className="icon"
               style={{
-                background: page === "dashboard" ? color : "", 
+                background: page === "dashboard" ? color : "",
               }}
             >
               {dashboard}
@@ -172,7 +185,7 @@ function Sidenav({ color }) {
             >
               {pagamentos}
             </span>
-            <span className="label">pagamentos</span>
+            <span className="label">Pagamentos</span>
           </NavLink>
         </Menu.Item>
         <Menu.Item key="4">
@@ -188,7 +201,6 @@ function Sidenav({ color }) {
             <span className="label">Agenda</span>
           </NavLink>
         </Menu.Item>
-
         <Menu.Item key="5">
           <NavLink to="/ControleAD">
             <span
@@ -202,27 +214,20 @@ function Sidenav({ color }) {
             <span className="label">Controle de Campanha</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="6">
-        <NavLink to="/Sign-in">
-            <span
-              className="icon"
-              style={{
-                background: page === "Sign-in" ? color : "",
-              }}
-            >
-              {Agenda}
+        <Menu.Item key="6" onClick={handleLogout} >
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span className="icon">
+              {logoutIcon}
             </span>
             <span className="label">Sair</span>
-          </NavLink>
+          </div>
         </Menu.Item>
       </Menu>
+      
       <div className="aside-footer">
-        
-       
-        
       </div>
     </>
   );
 }
 
-export default Sidenav;
+export default withRouter(Sidenav);

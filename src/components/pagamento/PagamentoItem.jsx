@@ -30,7 +30,7 @@ const PagamentoItem = ({ pagamento, onEdit, onDelete }) => {
     <div className="list-item">
       <div className="list-item-content">
         <h3>
-          {pagamento.clientes?.nome || 'Cliente não disponível'}
+          {pagamento.cliente?.nome || 'Cliente não disponível'}
           <span className={`status-badge ${getStatusClass(pagamento.status)}`}>
             {pagamento.status.charAt(0).toUpperCase() + pagamento.status.slice(1)}
           </span>
@@ -38,7 +38,6 @@ const PagamentoItem = ({ pagamento, onEdit, onDelete }) => {
         <div className="item-details">
           <p><strong>Valor:</strong> {formatarValor(pagamento.valor)}</p>
           <p><strong>Data:</strong> {formatarData(pagamento.data_pagamento)}</p>
-          <p><strong>Agência:</strong> {pagamento.agencias?.nome || 'Não informado'}</p>
           <p><strong>Método:</strong> {pagamento.metodo_pagamento || 'Não informado'}</p>
           {pagamento.descricao && <p><strong>Descrição:</strong> {pagamento.descricao}</p>}
         </div>

@@ -1,14 +1,11 @@
-// src/components/pagamento/PagamentoForm.jsx
 import React, { useState, useEffect } from 'react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { clienteService } from '../../services/clienteService';
-import { agenciaService } from '../../services/agenciaService';
 
 const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
   const [formData, setFormData] = useState({
     cliente_id: '',
-    agencia_id: '',
     valor: '',
     data_pagamento: new Date().toISOString().split('T')[0],
     metodo_pagamento: '',
@@ -18,22 +15,16 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
   });
   
   const [clientes, setClientes] = useState([]);
-  const [agencias, setAgencias] = useState([]);
   const [errors, setErrors] = useState({});
   const [loadingDependencies, setLoadingDependencies] = useState(true);
   
   useEffect(() => {
     const fetchDependencies = async () => {
       try {
-        const [clientesData, agenciasData] = await Promise.all([
-          clienteService.getAll(),
-          agenciaService.getAll()
-        ]);
-        
+        const clientesData = await clienteService.getAll();
         setClientes(clientesData);
-        setAgencias(agenciasData);
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('Erro ao carregar clientes:', error);
       } finally {
         setLoadingDependencies(false);
       }
@@ -45,7 +36,6 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
   useEffect(() => {
     setFormData({
       cliente_id: '',
-      agencia_id: '',
       valor: '',
       data_pagamento: new Date().toISOString().split('T')[0],
       metodo_pagamento: '',
@@ -103,22 +93,6 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
           ))}
         </select>
         {errors.cliente_id && <div className="error-message">{errors.cliente_id}</div>}
-      </div>
-      
-      <div className="form-group">
-        <label htmlFor="agencia_id" className="form-label">Agência</label>
-        <select
-          id="agencia_id"
-          name="agencia_id"
-          value={formData.agencia_id}
-          onChange={handleChange}
-          className="form-select"
-        >
-          <option value="">Selecione uma agência (opcional)</option>
-          {agencias.map(agencia => (
-            <option key={agencia.id} value={agencia.id}>{agencia.nome}</option>
-          ))}
-        </select>
       </div>
       
       <Input

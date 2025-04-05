@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
 // Prefixo REACT_APP_ necessário para variáveis de ambiente em aplicativos React
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_KEY;
+const supabaseUrl = 'https://uvhymqggrunmuxgudljh.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2aHltcWdncnVubXV4Z3VkbGpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDQzMzgsImV4cCI6MjA1OTM4MDMzOH0.Fr07KMPdQP63jV_BXly3BCCsVAwB7vqfbmQ-r1_mCoY';
 
 // Verificando e alertando se as variáveis de ambiente não estão definidas
 if (!supabaseUrl || !supabaseKey) {

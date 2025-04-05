@@ -7,8 +7,7 @@ export const pagamentoService = {
       .from('pagamentos')
       .select(`
         *,
-        clientes (id, nome),
-        agencias (id, nome)
+        clientes!inner(id, nome)
       `)
       .order('data_pagamento', { ascending: false });
     
@@ -21,8 +20,7 @@ export const pagamentoService = {
       .from('pagamentos')
       .select(`
         *,
-        clientes (id, nome),
-        agencias (id, nome)
+        clientes!inner(id, nome)
       `)
       .eq('id', id)
       .single();
@@ -32,13 +30,22 @@ export const pagamentoService = {
   },
   
   async create(pagamento) {
+    // Garante que estamos enviando apenas os campos necessários
+    const payload = {
+      cliente_id: pagamento.cliente_id,
+      valor: pagamento.valor,
+      data_pagamento: pagamento.data_pagamento,
+      metodo_pagamento: pagamento.metodo_pagamento,
+      status: pagamento.status,
+      descricao: pagamento.descricao
+    };
+
     const { data, error } = await supabase
       .from('pagamentos')
-      .insert([pagamento])
+      .insert([payload])
       .select();
     
     if (error) throw error;
-    // Verificar se data existe e tem pelo menos um item
     if (!data || data.length === 0) {
       throw new Error('Erro ao criar pagamento: Nenhum dado retornado');
     }
@@ -46,14 +53,23 @@ export const pagamentoService = {
   },
   
   async update(id, pagamento) {
+    // Garante que estamos enviando apenas os campos necessários
+    const payload = {
+      cliente_id: pagamento.cliente_id,
+      valor: pagamento.valor,
+      data_pagamento: pagamento.data_pagamento,
+      metodo_pagamento: pagamento.metodo_pagamento,
+      status: pagamento.status,
+      descricao: pagamento.descricao
+    };
+
     const { data, error } = await supabase
       .from('pagamentos')
-      .update(pagamento)
+      .update(payload)
       .eq('id', id)
       .select();
     
     if (error) throw error;
-    // Verificar se data existe e tem pelo menos um item
     if (!data || data.length === 0) {
       throw new Error('Erro ao atualizar pagamento: Nenhum dado retornado');
     }

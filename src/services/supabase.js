@@ -3,10 +3,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (process.env.REACT_APP_SUPABASE_KEY == null || process.env.REACT_APP_SUPABASE_URL == null) {
-  console.log('Variaveis de ambiente não encontradas. Verifique se o arquivo .env está configurado corretamente.');
-}
-
 // Prefixo REACT_APP_ necessário para variáveis de ambiente em aplicativos React
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_KEY;

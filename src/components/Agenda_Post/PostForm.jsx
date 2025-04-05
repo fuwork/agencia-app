@@ -151,7 +151,7 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
           onChange={handleChange}
           className="form-select"
         >
-          <option value="">Selecione uma agência (opcional)</option>
+          <option value="">Selecione uma agência</option>
           {agencias.map(agencia => (
             <option key={agencia.id} value={agencia.id}>{agencia.nome}</option>
           ))}

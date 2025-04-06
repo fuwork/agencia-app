@@ -1,4 +1,3 @@
-// src/components/pagamento/PagamentoForm.jsx
 import React, { useState, useEffect } from 'react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -17,6 +16,7 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
     ...pagamento
   });
   
+  const [valorFormatado, setValorFormatado] = useState('');
   const [clientes, setClientes] = useState([]);
   const [agencias, setAgencias] = useState([]);
   const [errors, setErrors] = useState({});
@@ -53,7 +53,38 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
       descricao: '',
       ...pagamento
     });
+    
+    // Formatar o valor inicial quando o componente é carregado com dados existentes
+    if (pagamento?.valor) {
+      setValorFormatado(formatarValorParaExibicao(pagamento.valor));
+    }
   }, [pagamento]);
+  
+  const formatarValorParaExibicao = (valor) => {
+    if (!valor && valor !== 0) return '';
+    
+    // Converter para string e garantir que seja um número válido
+    const valorNumerico = parseFloat(valor);
+    if (isNaN(valorNumerico)) return '';
+    
+    // Formatar como moeda brasileira (sem o símbolo de R$)
+    return valorNumerico.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+  
+  const formatarValorParaArmazenamento = (valor) => {
+    if (!valor) return '';
+    
+    // Remove todos os caracteres não numéricos exceto o ponto ou vírgula decimal
+    const apenasNumerosEVirgula = valor.replace(/[^\d.,]/g, '');
+    
+    // Substitui vírgula por ponto para garantir que o valor seja um número válido em JavaScript
+    const valorFormatado = apenasNumerosEVirgula.replace(',', '.');
+    
+    return valorFormatado;
+  };
   
   const validate = () => {
     const newErrors = {};
@@ -68,10 +99,43 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
   
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
-    }));
+    
+    if (name === 'valor') {
+      // Tratamento especial para o campo de valor
+      handleValorChange(value);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'number' ? parseFloat(value) : value
+      }));
+    }
+  };
+  
+  const handleValorChange = (valor) => {
+    // Remove qualquer formatação existente para obter apenas os dígitos
+    const apenasDigitos = valor.replace(/\D/g, '');
+    
+    // Se não houver dígitos, limpa o campo
+    if (!apenasDigitos) {
+      setValorFormatado('');
+      setFormData(prev => ({ ...prev, valor: '' }));
+      return;
+    }
+    
+    // Converte para centavos e depois para o formato de moeda
+    const valorEmCentavos = parseInt(apenasDigitos, 10);
+    const valorDecimal = valorEmCentavos / 100;
+    
+    // Atualiza o estado do valor formatado para exibição
+    const novoValorFormatado = valorDecimal.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    setValorFormatado(novoValorFormatado);
+    
+    // Atualiza o valor no formData para o valor numérico
+    setFormData(prev => ({ ...prev, valor: valorDecimal }));
   };
   
   const handleSubmit = (e) => {
@@ -121,18 +185,23 @@ const PagamentoForm = ({ pagamento = {}, onSubmit, isLoading = false }) => {
         </select>
       </div>
       
-      <Input
-        label="Valor"
-        type="number"
-        id="valor"
-        name="valor"
-        value={formData.valor}
-        onChange={handleChange}
-        placeholder="0,00"
-        step="0.01"
-        required
-        error={errors.valor}
-      />
+      <div className="form-group">
+        <label htmlFor="valor" className="form-label">Valor</label>
+        <div className="input-group">
+          <span className="input-group-text">R$</span>
+          <input
+            type="text"
+            id="valor"
+            name="valor"
+            value={valorFormatado}
+            onChange={handleChange}
+            placeholder="0,00"
+            className={`form-input ${errors.valor ? 'input-error' : ''}`}
+            required
+          />
+        </div>
+        {errors.valor && <div className="error-message">{errors.valor}</div>}
+      </div>
       
       <Input
         label="Data do Pagamento"

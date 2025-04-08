@@ -208,10 +208,8 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
           onChange={handleChange}
           className="form-select"
         >
-          <option value="agendado">Agendado</option>
-          <option value="publicando">Publicando</option>
-          <option value="publicado">Publicado</option>
-          <option value="falhou">Falhou</option>
+          <option value="agendado">agendado</option>
+          <option value="publicar">publicar</option>
         </select>
       </div>
 

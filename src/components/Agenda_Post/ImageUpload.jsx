@@ -10,7 +10,6 @@ const ImageUploadField = ({ formData, setFormData, errors }) => {
     setFormData(prev => ({
       ...prev,
       tipoConteudo,
-      // Limpar o campo de imagem ao trocar o tipo
       imagem: '',
       imagemNome: ''
     }));
@@ -26,7 +25,6 @@ const ImageUploadField = ({ formData, setFormData, errors }) => {
     setFormData(prev => ({
       ...prev,
       tipoImagem: tipo,
-      // Limpar o campo de imagem ao trocar o tipo
       imagem: tipo === 'upload' ? prev.imagem : '',
       imagemNome: tipo === 'upload' ? prev.imagemNome : ''
     }));

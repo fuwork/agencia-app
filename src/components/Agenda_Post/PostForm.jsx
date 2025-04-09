@@ -138,7 +138,7 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
         const webhookData = {
           ...cleanData,
           images: formData.tipoConteudo === 'Carrossel' 
-            ? carouselImages.map(img => img.url)
+            ? carouselImages.map(img => img.file)
             : [formData.imagem]
         };
 

@@ -36,6 +36,8 @@ class WebhookService {
         if (!Array.isArray(postData.images) || postData.images.length === 0) {
           throw new Error('Images array is invalid or empty for carousel post');
         }
+
+        console.log('[ postData.images ]', postData);
         postData.images.forEach((image) => {
           // const binaryFile = this.base64ToBlob(image.base64, image.type);
           formData.append('image', image, image.name);
@@ -46,6 +48,7 @@ class WebhookService {
         }
         // Convert base64 to binary file  
         // const binaryFile = this.base64ToBlob(postData.imagem.base64, postData.imagem.type);
+        console.log('[ postData.imagem ]', postData.imagem);
         formData.append('image', postData.imagem, postData.imagem.name);
       }
 

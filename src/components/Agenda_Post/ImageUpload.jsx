@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselImages, errors }) => {
   // Função para lidar com a alteração do tipo de conteúdo
@@ -7,7 +7,7 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
     setFormData(prev => ({
       ...prev,
       tipoConteudo,
-      imagem: null, // Alterado para null em vez de string vazia
+      imagem: null,
       imagemNome: '',
       images: [],
     }));
@@ -21,10 +21,9 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Armazenar o arquivo binário diretamente
       setFormData(prev => ({
         ...prev,
-        imagem: file, // Salva o objeto File diretamente
+        imagem: file,
         imagemNome: file.name,
       }));
     }
@@ -41,13 +40,12 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
     }
     
     if (files.length > 0) {
-      // Processar cada arquivo e criar uma URL temporária para visualização
       const processImage = (file) => {
         return new Promise((resolve) => {
-          const url = URL.createObjectURL(file); // Cria URL para preview
+          const url = URL.createObjectURL(file); // URL temporária para preview
           resolve({
-            file, // Armazena o objeto File binário
-            url,  // URL temporária para visualização
+            file, // Arquivo binário
+            url,  // URL para visualização
             name: file.name
           });
         });
@@ -60,15 +58,40 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
             alert(`O carrossel não pode ter mais que ${maxFiles} imagens no total.`);
             return;
           }
+          // Atualiza o estado carouselImages com objetos completos (file, url, name)
           setCarouselImages(totalImages);
+          // Garante que formData.images receba apenas os arquivos binários
+          setFormData(prev => {
+            const updatedFormData = {
+            ...prev,
+            images: totalImages.map(img => img.file),
+          };
+            // console.log('Updated formData:', updatedFormData);
+            return updatedFormData;
+          });
         });
     }
   };
 
   // Função para remover uma imagem do carrossel
   const removeCarouselImage = (index) => {
-    setCarouselImages(prevImages => prevImages.filter((_, i) => i !== index));
+    setCarouselImages(prevImages => {
+      const newImages = prevImages.filter((_, i) => i !== index);
+      // Atualiza formData.images com os arquivos binários restantes
+      setFormData(prev => ({
+        ...prev,
+        images: newImages.map(img => img.file),
+      }));
+      return newImages;
+    });
   };
+
+  // Cleanup das URLs temporárias ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      carouselImages.forEach(img => URL.revokeObjectURL(img.url));
+    };
+  }, [carouselImages]);
 
   return (
     <div className="form-group">

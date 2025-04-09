@@ -4,9 +4,9 @@ import { supabase } from './supabase';
 export const agenciaService = {
   async getAll() {
     const { data, error } = await supabase
-      .from('agencias')
+      .from('grupo')
       .select('*')
-      .order('nome');
+      .order('name');
     
     if (error) throw error;
     return data || [];
@@ -14,7 +14,7 @@ export const agenciaService = {
   
   async getById(id) {
     const { data, error } = await supabase
-      .from('agencias')
+      .from('grupo')
       .select('*')
       .eq('id', id)
       .single();

@@ -3,13 +3,12 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import ImageUploadField from './ImageUpload';
 import { clienteService } from '../../services/clienteService';
-import { agenciaService } from '../../services/agenciaService';
+import { webhookService } from '../../services/webhookService';
 
-const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
+const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false }) => {
   // Estado inicial centralizado
   const initialState = {
     cliente_id: '',
-    agencia_id: '',
     plataforma: '',
     data_publicacao: new Date().toISOString().split('T')[0],
     hora_publicacao: '12:00',
@@ -18,27 +17,29 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
     hashtags: '',
     imagem: '',
     tipoImagem: 'url',
+    tipoConteudo: '',
     imagem_nome: ''
   };
 
   const [formData, setFormData] = useState(initialState);
   const [clientes, setClientes] = useState([]);
-  const [agencias, setAgencias] = useState([]);
   const [errors, setErrors] = useState({});
   const [loadingDependencies, setLoadingDependencies] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [carouselImages, setCarouselImages] = useState([]);
 
   // Carrega clientes e agências
   useEffect(() => {
     const fetchDependencies = async () => {
       try {
-        const [clientesData, agenciasData] = await Promise.all([
+        const [clientesData] = await Promise.all([
           clienteService.getAll(),
-          agenciaService.getAll()
         ]);
         setClientes(clientesData);
-        setAgencias(agenciasData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
+        setError('Erro ao carregar dados necessários.');
       } finally {
         setLoadingDependencies(false);
       }
@@ -73,9 +74,13 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
       data_publicacao: data,
       hora_publicacao: hora,
       tipoImagem,
-      // Garante que campos não-undefined sejam mantidos
       imagem_nome: agendamento.imagem_nome || ''
     });
+
+    // Se existirem imagens de carrossel, carregá-las
+    if (agendamento.carouselImages) {
+      setCarouselImages(agendamento.carouselImages);
+    }
   }, [agendamento]);
 
   const validate = () => {
@@ -85,7 +90,17 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
     if (!formData.plataforma) newErrors.plataforma = 'Plataforma é obrigatória';
     if (!formData.data_publicacao) newErrors.data_publicacao = 'Data é obrigatória';
     if (!formData.hora_publicacao) newErrors.hora_publicacao = 'Horário é obrigatório';
-    if (!formData.imagem) newErrors.imagem = 'É necessário fornecer uma imagem';
+    
+    // Validação para imagens
+    if (formData.tipoConteudo === 'Carrossel') {
+      if (carouselImages.length === 0) {
+        newErrors.imagem = 'É necessário adicionar pelo menos uma imagem ao carrossel';
+      } else if (carouselImages.length > 10) {
+        newErrors.imagem = 'O carrossel não pode ter mais de 10 imagens';
+      }
+    } else if (!formData.imagem) {
+      newErrors.imagem = 'É necessário fornecer uma imagem';
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -96,24 +111,48 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      // Combina data e hora
-      const combinedDateTime = new Date(`${formData.data_publicacao}T${formData.hora_publicacao}`);
+      setIsSubmitting(true);
+      setError(null);
       
-      // Prepara dados para envio
-      const submissionData = {
-        ...formData,
-        data_publicacao: combinedDateTime.toISOString(),
-        // Garante que o ID seja passado na edição
-        id: agendamento?.id || undefined
-      };
+      try {
+        // Combina data e hora
+        const combinedDateTime = new Date(`${formData.data_publicacao}T${formData.hora_publicacao}`);
+        
+        // // Prepara dados para envio ao Supabase
+        const submissionData = {
+          ...formData,
+          data_publicacao: combinedDateTime.toISOString(),
+          id: agendamento?.id || undefined
+        };
 
-      // Remove campos auxiliares
-      const { hora_publicacao, tipoImagem, imagem_nome, ...cleanData } = submissionData;
-      
-      onSubmit(cleanData);
+        // Remove campos auxiliares
+        const { hora_publicacao, tipoImagem, imagem_nome, ...cleanData } = submissionData;
+        
+        // // Salva no Supabase
+        // const savedPost = await onSubmit(cleanData);
+
+        // Prepara dados para o webhook
+        const webhookData = {
+          ...cleanData,
+          images: formData.tipoConteudo === 'Carrossel' 
+            ? carouselImages.map(img => img.url)
+            : [formData.imagem]
+        };
+
+        // Envia para o webhook
+        await webhookService.sendPost(webhookData);
+
+        // Fecha o modal e limpa o estado
+        if (onClose) onClose();
+      } catch (error) {
+        console.error('Erro ao salvar post:', error);
+        setError(error.message || 'Erro ao salvar o post. Tente novamente.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -123,6 +162,12 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
 
   return (
     <form onSubmit={handleSubmit} className="agendamento-form">
+      {error && (
+        <div className="error-alert mb-4">
+          {error}
+        </div>
+      )}
+
       {/* Campos do cliente e agência */}
       <div className="form-group">
         <label htmlFor="cliente_id" className="form-label">Cliente</label>
@@ -142,23 +187,6 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
         {errors.cliente_id && <div className="error-message">{errors.cliente_id}</div>}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="agencia_id" className="form-label">Agência</label>
-        <select
-          id="agencia_id"
-          name="agencia_id"
-          value={formData.agencia_id}
-          onChange={handleChange}
-          className="form-select"
-        >
-          <option value="">Selecione uma agência</option>
-          {agencias.map(agencia => (
-            <option key={agencia.id} value={agencia.id}>{agencia.nome}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Restante dos campos do formulário permanecem iguais */}
       <div className="form-group">
         <label htmlFor="plataforma" className="form-label">Plataforma</label>
         <select
@@ -208,8 +236,8 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
           onChange={handleChange}
           className="form-select"
         >
-          <option value="agendado">agendado</option>
-          <option value="publicar">publicar</option>
+          <option value="agendado">Agendado</option>
+          <option value="publicar">Publicar</option>
         </select>
       </div>
 
@@ -242,12 +270,14 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, isLoading = false }) => {
       <ImageUploadField 
         formData={formData}
         setFormData={setFormData}
+        carouselImages={carouselImages}
+        setCarouselImages={setCarouselImages}
         errors={errors}
       />
 
       <div className="form-actions">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : agendamento?.id ? 'Atualizar' : 'Agendar Post'}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Salvando...' : agendamento?.id ? 'Atualizar' : 'Agendar Post'}
         </Button>
       </div>
     </form>

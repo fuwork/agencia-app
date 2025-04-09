@@ -7,8 +7,7 @@ export const agendaPostService = {
       .from('agendamentos')
       .select(`
         *,
-        cliente:cliente_id (id, nome),
-        agencia:agencia_id (id, nome)
+        cliente:cliente_id (id, nome)
       `)
       .order('data_publicacao', { ascending: true });
     
@@ -21,8 +20,7 @@ export const agendaPostService = {
       .from('agendamentos')
       .select(`
         *,
-        cliente:cliente_id (id, nome),
-        agencia:agencia_id (id, nome)
+        cliente:cliente_id (id, nome)
       `)
       .eq('id', id)
       .single();
@@ -34,7 +32,6 @@ export const agendaPostService = {
   async create(agendamento) {
     const payload = {
       cliente_id: agendamento.cliente_id,
-      agencia_id: agendamento.agencia_id || null,
       plataforma: agendamento.plataforma,
       data_publicacao: agendamento.data_publicacao,
       status: agendamento.status || 'agendado',
@@ -56,7 +53,6 @@ export const agendaPostService = {
   async update(id, updateData) {
     const payload = {
       cliente_id: updateData.cliente_id,
-      agencia_id: updateData.agencia_id || null,
       plataforma: updateData.plataforma,
       data_publicacao: updateData.data_publicacao,
       status: updateData.status,

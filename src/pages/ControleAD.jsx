@@ -2,49 +2,50 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { supabase } from '../services/supabase';
-import AgencyCard from '../components/Controle/Card';
+import Card from '../components/Controle/Card';
 import CampaignsModal from '../components/Controle/Modal';
 
 const ControlePage = () => {
-  const [agencias, setagencias] = useState([]);
-  const [filteredagencias, setFilteredagencias] = useState([]);
+  const [clientes, setclientes] = useState([]);
+  const [filteredclientes, setFilteredclientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAgency, setSelectedAgency] = useState(null);
+  const [selectedCliente, setSelectedCliente] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
 
   useEffect(() => {
-    fetchagencias();
+    fetchclientes();
   }, []);
 
   useEffect(() => {
-    const filtered = agencias.filter(agency => 
-      agency.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = clientes.filter(cliente => 
+      cliente.nome.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredagencias(filtered);
-  }, [searchTerm, agencias]);
+    setFilteredclientes(filtered);
+  }, [searchTerm, clientes]);
 
-  const fetchagencias = async () => {
+  const fetchclientes = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('agencias')
-        .select('*');
+        .from('clientes')
+        .select('*')
+        ;
       
       if (error) throw error;
       
-      setagencias(data);
-      setFilteredagencias(data);
+      setclientes(data);
+      setFilteredclientes(data);
     } catch (error) {
-      console.error('Error fetching agencias:', error);
+      console.error('Error fetching clientes:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAgencyClick = (agency) => {
-    setSelectedAgency(agency);
+  const handleClienteClick = (cliente) => {
+    setSelectedCliente(cliente);
     setShowModal(true);
   };
 
@@ -57,19 +58,19 @@ const ControlePage = () => {
         &larr; Voltar
       </Button>
       
-      <h1 className="mb-4">Controle de Campanhas por Agência</h1>
+      <h1 className="mb-4">Controle de Campanhas por Cliente</h1>
       
       <Row className="mb-4">
         <Col md={8}>
           <Form.Control
             type="text"
-            placeholder="Pesquisar agência..."
+            placeholder="Pesquisar cliente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </Col>
         <Col md={4}>
-          <Button variant="primary" onClick={fetchagencias} className="w-100">
+          <Button variant="primary" onClick={fetchclientes} className="w-100">
             Buscar
           </Button>
         </Col>
@@ -83,22 +84,22 @@ const ControlePage = () => {
         </div>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
-          {filteredagencias.map(agency => (
-            <Col key={agency.id}>
-              <AgencyCard 
-                agency={agency} 
-                onClick={() => handleAgencyClick(agency)}
+          {filteredclientes.map(cliente => (
+            <Col key={cliente.id}>
+              <Card 
+                cliente={cliente} 
+                onClick={() => handleClienteClick(cliente)}
               />
             </Col>
           ))}
         </Row>
       )}
       
-      {selectedAgency && (
+      {selectedCliente && (
         <CampaignsModal
           show={showModal}
           onHide={() => setShowModal(false)}
-          agency={selectedAgency}
+          cliente={selectedCliente}
         />
       )}
     </Container>

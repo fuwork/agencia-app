@@ -1,4 +1,3 @@
-// src/pages/AgendaPost.jsx
 import React, { useState, useEffect } from 'react';
 import { agendaPostService } from '../services/agendaPost';
 import PostList from '../components/Agenda_Post/PostList';
@@ -75,7 +74,6 @@ const AgendaPost = () => {
       }
     }
   };
-  
   return (
     <div className="page-container">
       <div className="page-header">

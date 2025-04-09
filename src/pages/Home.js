@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { clienteService } from '../services/clienteService';
-import { agenciaService } from '../services/agenciaService';
 import { pagamentoService } from '../services/pagamentoService';
 import { supabase } from '../services/supabase';
 
@@ -23,7 +22,6 @@ function Home() {
 
   const [stats, setStats] = useState({
     totalClientes: 0,
-    totalAgencias: 0,
     totalPagamentos: 0,
     valorTotalPagamentos: 0,
     pagamentosPendentes: 0,
@@ -146,9 +144,8 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [clientes, agencias, pagamentos] = await Promise.all([
+        const [clientes, pagamentos] = await Promise.all([
           clienteService.getAll(),
-          agenciaService.getAll(),
           pagamentoService.getAll(),
         ]);
   
@@ -158,7 +155,6 @@ function Home() {
   
         setStats({
           totalClientes: clientes.length,
-          totalAgencias: agencias.length,
           totalPagamentos: pagamentos.length,
           valorTotalPagamentos: valorTotal,
           pagamentosPendentes: pendentes,
@@ -267,13 +263,6 @@ function Home() {
       title: stats.totalClientes,
       persent: "",
       icon: profile,
-      bnb: "bnb2",
-    },
-    {
-      today: "Agências",
-      title: stats.totalAgencias,
-      persent: "",
-      icon: cart,
       bnb: "bnb2",
     },
     {

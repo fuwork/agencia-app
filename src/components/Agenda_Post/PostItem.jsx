@@ -24,14 +24,6 @@ const AgendamentoItem = ({ agendamento, onEdit, onDelete }) => {
     }
   };
   
-  const getPlataformaIcon = (plataforma) => {
-    switch (plataforma) {
-      case 'instagram': return '📸'; // Emoji para Instagram
-      case 'facebook': return '👍'; // Emoji para Facebook
-      case 'ambos': return '📱'; // Emoji para ambas plataformas
-      default: return '📱';
-    }
-  };
   
   return (
     <div className="list-item">
@@ -44,7 +36,7 @@ const AgendamentoItem = ({ agendamento, onEdit, onDelete }) => {
         </h3>
         <div className="item-details">
           <p>
-            <strong>Plataforma:</strong> {getPlataformaIcon(agendamento.plataforma)} {agendamento.plataforma.charAt(0).toUpperCase() + agendamento.plataforma.slice(1)}
+            <strong>Plataforma:</strong> {(agendamento.plataforma)} {agendamento.plataforma.charAt(0).toUpperCase() + agendamento.plataforma.slice(1)}
           </p>
           <p><strong>Data:</strong> {formatarData(agendamento.data_publicacao)}</p>
           <p><strong>Horário:</strong> {formatarHorario(agendamento.data_publicacao)}</p>

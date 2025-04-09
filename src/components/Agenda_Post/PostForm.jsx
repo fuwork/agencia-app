@@ -228,20 +228,6 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
       />
 
       <div className="form-group">
-        <label htmlFor="status" className="form-label">Status</label>
-        <select
-          id="status"
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          className="form-select"
-        >
-          <option value="agendado">Agendado</option>
-          <option value="publicar">Publicar</option>
-        </select>
-      </div>
-
-      <div className="form-group">
         <label htmlFor="descricao" className="form-label">Legenda/Descrição</label>
         <textarea
           id="descricao"

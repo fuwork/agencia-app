@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import Agenda from "./pages/Agenda_Post";
 import SignIn from "./pages/SignIn";
 import Clientes from "./pages/Clientes";
-import pagamentos from "./pages/Pagamentos";
+import Pagamentos from "./pages/Pagamentos";
 import Main from "./components/layout/Main";
 import Controle from "./pages/ControleAD";
 import { supabase } from "./services/supabase";
@@ -17,7 +17,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
-// Componente de rota protegida
 const ProtectedRoute = ({ component: Component, isAuthenticated, isLoading, ...rest }) => (
   <Route
     {...rest}
@@ -40,7 +39,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    let isMounted = true; // Flag para controle de montagem
+    const abortController = new AbortController();
 
     const checkAuth = async () => {
       try {
@@ -48,7 +47,7 @@ function App() {
         
         if (error) throw error;
 
-        if (isMounted) {
+        if (!abortController.signal.aborted) {
           setIsAuthenticated(!!data.session);
           if (data.session) {
             localStorage.setItem('authToken', data.session.access_token);
@@ -57,13 +56,13 @@ function App() {
           }
         }
       } catch (error) {
-        console.error("Erro ao verificar autenticação:", error);
-        if (isMounted) {
-          setIsAuthenticated(false);
-          localStorage.removeItem('authToken');
+        if (!abortController.signal.aborted) {
+          console.error("Erro na verificação de autenticação:", error);
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -71,7 +70,7 @@ function App() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return;
+        if (abortController.signal.aborted) return;
         
         switch (event) {
           case 'SIGNED_IN':
@@ -87,12 +86,14 @@ function App() {
               localStorage.setItem('authToken', session.access_token);
             }
             break;
+          default:
+            break;
         }
       }
     );
 
     return () => {
-      isMounted = false;
+      abortController.abort();
       if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
       }
@@ -103,19 +104,6 @@ function App() {
   const handleLoginSuccess = (session) => {
     localStorage.setItem('authToken', session.access_token);
     setIsAuthenticated(true);
-  };
-
-  // Função para logout
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.removeItem('authToken');
-      setIsAuthenticated(false);
-      return true;
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      return false;
-    }
   };
 
   if (isLoading) {
@@ -146,7 +134,7 @@ function App() {
         <ProtectedRoute 
           exact 
           path="/pagamentos" 
-          component={pagamentos} 
+          component={Pagamentos} 
           isAuthenticated={isAuthenticated}
           isLoading={isLoading}
         />

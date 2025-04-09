@@ -37,7 +37,7 @@ function Sidenav({ color, history }) {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      key={0}
+      key={7}
     >
       <path
         d="M9 2C8.44772 2 8 2.44772 8 3C8 3.55228 8.44772 4 9 4H11C11.5523 4 12 3.55228 12 3C12 2.44772 11.5523 2 11 2H9Z"
@@ -59,7 +59,7 @@ function Sidenav({ color, history }) {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      key={0}
+      key={8}
     >
       <path
         d="M4 4C2.89543 4 2 4.89543 2 6V7H18V6C18 4.89543 17.1046 4 16 4H4Z"
@@ -81,7 +81,7 @@ function Sidenav({ color, history }) {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      key={0}
+      key={9}
     >
       <path
         fillRule="evenodd"
@@ -99,7 +99,7 @@ function Sidenav({ color, history }) {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      key={0}
+      key={10}
       
     >
       <path
@@ -112,7 +112,9 @@ function Sidenav({ color, history }) {
   ];
   
   const logoutIcon = [
-    <i className="bi bi-box-arrow-right" style={{ fontSize: '20px', color }} />
+    <i className="bi bi-box-arrow-right" style={{ fontSize: '20px', color }} 
+    key={11}
+    />
   ];
 
   const handleLogout = () => {
@@ -162,7 +164,7 @@ function Sidenav({ color, history }) {
             <span className="label">Dashboard</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="2">
+        <Menu.Item key="2"> 
           <NavLink to="/Clientes">
             <span
               className="icon"

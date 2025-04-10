@@ -4,6 +4,45 @@ import Button from '../ui/Button';
 import ImageUploadField from './ImageUpload';
 import { clienteService } from '../../services/clienteService';
 import { webhookService } from '../../services/webhookService';
+import PostPreview from './PostPreview';
+
+const HoraSelector = ({ value, onChange, error }) => {
+  // Gera horários das 7:00 às 22:00 
+  const horarios = [];
+  for (let hora = 7; hora <= 22; hora++) {
+
+    horarios.push(`${String(hora).padStart(2, '0')}:00`);  
+    if (hora < 22) {
+      horarios.push(`${String(hora).padStart(2, '0')}:30`);
+    }
+  }
+
+  return (
+    <div className="form-group">
+      <label htmlFor="hora_publicacao" className="form-label">Horário da Publicação</label>
+      <select
+        id="hora_publicacao"
+        name="hora_publicacao"
+        value={value}
+        onChange={(e) => onChange({ 
+          target: { 
+            name: 'hora_publicacao', 
+            value: e.target.value
+          } 
+        })}
+        className={`form-select ${error ? 'input-error' : ''}`}
+        required
+      >
+        {horarios.map((horario) => (
+          <option key={horario} value={horario}>
+            {horario}
+          </option>
+        ))}
+      </select>
+      {error && <div className="error-message">{error}</div>}
+    </div>
+  );
+};
 
 const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false }) => {
   // Estado inicial centralizado
@@ -11,7 +50,7 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
     cliente_id: '',
     plataforma: '',
     data_publicacao: new Date().toISOString().split('T')[0],
-    hora_publicacao: '12:00',
+    hora_publicacao: '12:30',
     status: 'agendado',
     descricao: '',
     hashtags: '',
@@ -48,7 +87,6 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
     fetchDependencies();
   }, []);
 
-  // Atualiza formData quando o agendamento prop muda
   useEffect(() => {
     if (!agendamento || Object.keys(agendamento).length === 0) {
       setFormData(initialState);
@@ -57,12 +95,16 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
 
     // Formata data e hora
     let data = initialState.data_publicacao;
-    let hora = initialState.hora_publicacao;
+    let hora = '12:30';
     
     if (agendamento.data_publicacao) {
       const dataObj = new Date(agendamento.data_publicacao);
       data = dataObj.toISOString().split('T')[0];
-      hora = `${String(dataObj.getHours()).padStart(2, '0')}:${String(dataObj.getMinutes()).padStart(2, '0')}`;
+      const horas = dataObj.getHours();
+      const minutos = dataObj.getMinutes();
+      const ajusteMinutos = minutos < 30 ? '00' : '30';
+      hora = `${String(horas).padStart(2, '0')}:${ajusteMinutos}`;
+    
     }
 
     // Determina tipo de imagem
@@ -89,8 +131,17 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
     if (!formData.cliente_id) newErrors.cliente_id = 'Cliente é obrigatório';
     if (!formData.plataforma) newErrors.plataforma = 'Plataforma é obrigatória';
     if (!formData.data_publicacao) newErrors.data_publicacao = 'Data é obrigatória';
-    if (!formData.hora_publicacao) newErrors.hora_publicacao = 'Horário é obrigatório';
     
+     // Validação do horário
+     if (!formData.hora_publicacao) {
+      newErrors.hora_publicacao = 'Horário é obrigatório';
+    } else {
+      const [_, minutes] = formData.hora_publicacao.split(':');
+      if (minutes !== '00' && minutes !== '30') {
+        newErrors.hora_publicacao = 'O horário deve ser a cada 30 minutos (XX:00 ou XX:30)';
+      }
+    }
+
     // Validação para imagens
     if (formData.tipoConteudo === 'Carrossel') {
       if (carouselImages.length === 0) {
@@ -160,6 +211,8 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
     return <div className="loading">Carregando...</div>;
   }
 
+  const showPreview = formData.cliente_id && formData.plataforma;
+
   return (
     <form onSubmit={handleSubmit} className="agendamento-form">
       {error && (
@@ -216,14 +269,9 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
         error={errors.data_publicacao}
       />
 
-      <Input
-        label="Horário da Publicação"
-        type="time"
-        id="hora_publicacao"
-        name="hora_publicacao"
+      <HoraSelector
         value={formData.hora_publicacao}
         onChange={handleChange}
-        required
         error={errors.hora_publicacao}
       />
 
@@ -260,6 +308,16 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
         setCarouselImages={setCarouselImages}
         errors={errors}
       />
+
+      {showPreview && (
+      <div className="mt-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">Preview da Postagem</h3>
+        <PostPreview 
+          formData={formData} 
+          carouselImages={carouselImages}
+        />
+      </div>
+      )}
 
       <div className="form-actions">
         <Button type="submit" disabled={isSubmitting}>

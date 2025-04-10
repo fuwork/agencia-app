@@ -101,9 +101,8 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
         value={formData.tipoConteudo || ''}
         onChange={handleTipoConteudoChange}
       >
-        <option value="">Selecione o tipo</option>
-        <option value="umaImagem">Uma imagem</option>
-        <option value="Carrossel">Carrossel</option>
+        <option value="">Oque deseja fazer?</option>
+        <option value="Carrossel">Post</option>
         <option value="Story">Story</option>
       </select>
       

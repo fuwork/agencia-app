@@ -2,14 +2,13 @@ import axios from 'axios';
 
 class WebhookService {
   constructor() {
-    this.webhookUrl = process.env.REACT_APP_WEBHOOK_URL || 'http://168.138.68.214:5678/webhook-test/158aa4b8-5f5f-4ed2-9e4a-3b6fd6c82a4f';
+    this.webhookUrl = 'http://168.138.68.214:5678/webhook/e7f3081a-b31f-4009-aaf3-1afd0312967ff';
     this.username = process.env.REACT_APP_WEBHOOK_USERNAME;
     this.password = process.env.REACT_APP_WEBHOOK_PASSWORD;
   }
 
   async sendPost(postData) {
     try {
-
       // Create Basic Auth credentials
       const auth = Buffer.from(`${this.username}:${this.password}`).toString('base64');
 
@@ -23,34 +22,39 @@ class WebhookService {
         scheduled_time: postData.data_publicacao,
         caption: this.formatCaption(postData.descricao, postData.hashtags),
         client_id: postData.cliente_id,
-        status: postData.status,
+        status: postData.status || 'agendado', // Definir status padrão
       };
-
-
 
       // Create FormData to handle binary files
       const formData = new FormData();
-      formData.append('payload', JSON.stringify(payload));
 
       if (isCarousel) {
-        if (!Array.isArray(postData.images) || postData.images.length === 0) {
-          throw new Error('Images array is invalid or empty for carousel post');
-        }
+        this.validateCarousel(postData.images); // Adicionar validação
 
-        console.log('[ postData.images ]', postData);
-        postData.images.forEach((image) => {
-          // const binaryFile = this.base64ToBlob(image.base64, image.type);
-          formData.append('image', image, image.name);
+        // Adicionar array carousel_items ao payload
+        payload.carousel_items = postData.images.map((image, index) => ({
+          fileName: image.name,
+          order: index + 1, // Ordem começando em 1
+        }));
+
+        // Anexar imagens ao FormData
+        postData.images.forEach((image, index) => {
+          formData.append(`image_${index}`, image, image.name);
         });
       } else {
-        if (!postData.imagem) {
-          throw new Error(`Image object is missing required properties (base64 , type  , or name)`);
+
+        console.log('postData.imagem', postData.imagem);
+        
+        if (!postData.imagem || !postData.imagem.name) {
+          throw new Error('Imagem inválida para postagem simples');
         }
-        // Convert base64 to binary file  
-        // const binaryFile = this.base64ToBlob(postData.imagem.base64, postData.imagem.type);
-        console.log('[ postData.imagem ]', postData.imagem);
+        // Anexar imagem única ao FormData
+        payload.fileName = postData.imagem.name;
         formData.append('image', postData.imagem, postData.imagem.name);
       }
+
+      // Adicionar o payload como string JSON
+      formData.append('payload', JSON.stringify(payload));
 
       const response = await axios.post(this.webhookUrl, formData, {
         headers: {
@@ -63,24 +67,12 @@ class WebhookService {
         throw new Error(response.data.message || 'Erro ao enviar post para o webhook');
       }
 
-      const result = response.data;
-
-      return result;
+      return response.data;
     } catch (error) {
       console.error('Erro ao enviar post:', error);
       throw error;
     }
   }
-
-  // base64ToBlob(base64, mimeType) {
-  //   const byteCharacters = atob(base64);
-  //   const byteNumbers = new Array(byteCharacters.length);
-  //   for (let i = 0; i < byteCharacters.length; i++) {
-  //     byteNumbers[i] = byteCharacters.charCodeAt(i);
-  //   }
-  //   const byteArray = new Uint8Array(byteNumbers);
-  //   return new Blob([byteArray], { type: mimeType });
-  // }
 
   formatCaption(description, hashtags) {
     let caption = description || '';
@@ -94,21 +86,17 @@ class WebhookService {
     if (!Array.isArray(images)) {
       throw new Error('Imagens do carrossel devem ser um array');
     }
-
     if (images.length > 10) {
       throw new Error('Carrossel não pode ter mais de 10 imagens');
     }
-
     if (images.length === 0) {
       throw new Error('Carrossel deve ter pelo menos uma imagem');
     }
-
     for (const image of images) {
       if (image.size > 8 * 1024 * 1024) {
         throw new Error('Tamanho da imagem não pode ser maior que 8MB');
       }
     }
-
     return true;
   }
 }

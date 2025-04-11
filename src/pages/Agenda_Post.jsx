@@ -52,7 +52,7 @@ const AgendaPost = () => {
       } else {
         await agendaPostService.create(formData);
       }
-      fetchAgendamentos(); // Removi o await aqui para melhorar a experiência do usuário
+      fetchAgendamentos(); 
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar agendamento:', error);
@@ -67,7 +67,7 @@ const AgendaPost = () => {
     if (window.confirm('Tem certeza que deseja excluir este agendamento?')) {
       try {
         await agendaPostService.delete(id);
-        fetchAgendamentos(); // Atualiza a lista após exclusão
+        fetchAgendamentos();
       } catch (error) {
         console.error('Erro ao excluir agendamento:', error);
         setError(`Erro ao excluir agendamento: ${error.message || 'Tente novamente mais tarde.'}`);
@@ -97,7 +97,7 @@ const AgendaPost = () => {
         isOpen={isModalOpen} 
         onClose={handleCloseModal}
         title={currentAgendamento ? 'Editar Agendamento' : 'Novo Agendamento'}
-        size="lg"
+        size="fullscreen"
       >
         {error && <div className="error-alert">{error}</div>}
         <PostForm 

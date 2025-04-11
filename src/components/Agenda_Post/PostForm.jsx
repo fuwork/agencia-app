@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import ImageUploadField from './ImageUpload';
+import PostPreview from './PostPreview'; 
 import { clienteService } from '../../services/clienteService';
 import { webhookService } from '../../services/webhookService';
-import PostPreview from './PostPreview';
+import { supabase } from '../../services/supabase';
 
 const HoraSelector = ({ value, onChange, error }) => {
   // Gera horários das 7:00 às 22:00 
   const horarios = [];
   for (let hora = 7; hora <= 22; hora++) {
-
     horarios.push(`${String(hora).padStart(2, '0')}:00`);  
     if (hora < 22) {
       horarios.push(`${String(hora).padStart(2, '0')}:30`);
@@ -44,8 +44,7 @@ const HoraSelector = ({ value, onChange, error }) => {
   );
 };
 
-const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false }) => {
-  // Estado inicial centralizado
+const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onChange }) => {
   const initialState = {
     cliente_id: '',
     plataforma: '',
@@ -67,8 +66,33 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [carouselImages, setCarouselImages] = useState([]);
+  const [postSuccess, setPostSuccess] = useState(false);
+  const [nextId, setNextId] = useState(1);
 
-  // Carrega clientes e agências
+  useEffect(() => {
+    const fetchLastId = async () => {
+      try {
+        // Busca o último ID do Supabase
+        const { data, error } = await supabase
+          .from('agendamentos')
+          .select('id_publicacao')
+          .order('id_publicacao', { ascending: false })
+          .limit(1);
+        
+        if (error) throw error;
+        
+        // Se encontrou algum registro, incrementa 1 para o próximo ID
+        if (data && data.length > 0) {
+          setNextId(data[0].id_publicacao + 1);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar último ID:', error);
+      }
+    };
+    
+    fetchLastId();
+  }, []);
+
   useEffect(() => {
     const fetchDependencies = async () => {
       try {
@@ -90,6 +114,7 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
   useEffect(() => {
     if (!agendamento || Object.keys(agendamento).length === 0) {
       setFormData(initialState);
+      setCarouselImages([]);
       return;
     }
 
@@ -104,26 +129,39 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
       const minutos = dataObj.getMinutes();
       const ajusteMinutos = minutos < 30 ? '00' : '30';
       hora = `${String(horas).padStart(2, '0')}:${ajusteMinutos}`;
-    
     }
 
     // Determina tipo de imagem
     const tipoImagem = agendamento.imagem?.startsWith('data:image') ? 'upload' : 'url';
 
-    setFormData({
+    const updatedFormData = {
       ...initialState,
       ...agendamento,
       data_publicacao: data,
       hora_publicacao: hora,
       tipoImagem,
       imagem_nome: agendamento.imagem_nome || ''
-    });
+    };
+
+    setFormData(updatedFormData);
 
     // Se existirem imagens de carrossel, carregá-las
     if (agendamento.carouselImages) {
       setCarouselImages(agendamento.carouselImages);
     }
-  }, [agendamento]);
+
+    // Comunica ao componente para atualizar o preview
+    if (onChange) {
+      onChange(updatedFormData, agendamento.carouselImages || []);
+    }
+  }, [agendamento, onChange]);
+
+  // Atualiza o preview sempre que os dados do formulário mudarem
+  useEffect(() => {
+    if (onChange) {
+      onChange(formData, carouselImages);
+    }
+  }, [formData, carouselImages, onChange]);
 
   const validate = () => {
     const newErrors = {};
@@ -132,8 +170,8 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
     if (!formData.plataforma) newErrors.plataforma = 'Plataforma é obrigatória';
     if (!formData.data_publicacao) newErrors.data_publicacao = 'Data é obrigatória';
     
-     // Validação do horário
-     if (!formData.hora_publicacao) {
+    // Validação do horário
+    if (!formData.hora_publicacao) {
       newErrors.hora_publicacao = 'Horário é obrigatório';
     } else {
       const [_, minutes] = formData.hora_publicacao.split(':');
@@ -159,7 +197,12 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const updatedFormData = { ...formData, [name]: value };
+    setFormData(updatedFormData);
+    
+    if (onChange) {
+      onChange(updatedFormData, carouselImages);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -172,18 +215,18 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
         // Combina data e hora
         const combinedDateTime = new Date(`${formData.data_publicacao}T${formData.hora_publicacao}`);
         
-        // // Prepara dados para envio ao Supabase
+        // Prepara dados para envio
         const submissionData = {
           ...formData,
           data_publicacao: combinedDateTime.toISOString(),
-          id: agendamento?.id || undefined
+          id: agendamento?.id || undefined,
+          id_publicacao: nextId
         };
 
         // Remove campos auxiliares
         const { hora_publicacao, tipoImagem, imagem_nome, ...cleanData } = submissionData;
         
-        // // Salva no Supabase
-        // const savedPost = await onSubmit(cleanData);
+        await onSubmit(cleanData);
 
         // Prepara dados para o webhook
         const webhookData = {
@@ -196,8 +239,13 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
         // Envia para o webhook
         await webhookService.sendPost(webhookData);
 
-        // Fecha o modal e limpa o estado
-        if (onClose) onClose();
+        setNextId(prevId => prevId + 1);
+
+        setPostSuccess(true);
+
+        setTimeout(() => {
+          if (onClose) onClose();
+        }, 2000);
       } catch (error) {
         console.error('Erro ao salvar post:', error);
         setError(error.message || 'Erro ao salvar o post. Tente novamente.');
@@ -211,121 +259,149 @@ const AgendamentoForm = ({ agendamento = {}, onSubmit, onClose, isLoading = fals
     return <div className="loading">Carregando...</div>;
   }
 
-  const showPreview = formData.cliente_id && formData.plataforma;
-
   return (
-    <form onSubmit={handleSubmit} className="agendamento-form">
-      {error && (
-        <div className="error-alert mb-4">
-          {error}
-        </div>
-      )}
+    <div className="split-layout">
+      <div className="form-container">
+        <form onSubmit={handleSubmit} className="agendamento-form">
+          {error && (
+            <div className="error-alert mb-4">
+              {error}
+            </div>
+          )}
 
-      {/* Campos do cliente e agência */}
-      <div className="form-group">
-        <label htmlFor="cliente_id" className="form-label">Cliente</label>
-        <select
-          id="cliente_id"
-          name="cliente_id"
-          value={formData.cliente_id}
-          onChange={handleChange}
-          className={`form-select ${errors.cliente_id ? 'input-error' : ''}`}
-          required
-        >
-          <option value="">Selecione um cliente</option>
-          {clientes.map(cliente => (
-            <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
-          ))}
-        </select>
-        {errors.cliente_id && <div className="error-message">{errors.cliente_id}</div>}
+          <div className="form-group">
+            <label htmlFor="appointmentId" className="form-label">ID</label>
+            <input 
+              type="text" 
+              id="appointmentId" 
+              className="form-control" 
+              value={nextId} 
+              readOnly 
+            />
+          </div>
+
+          {/* Campos do cliente */}
+          <div className="form-group">
+            <label htmlFor="cliente_id" className="form-label">Cliente</label>
+            <select
+              id="cliente_id"
+              name="cliente_id"
+              value={formData.cliente_id}
+              onChange={handleChange}
+              className={`form-select ${errors.cliente_id ? 'input-error' : ''}`}
+              required
+            >
+              <option value="">Selecione um cliente</option>
+              {clientes.map(cliente => (
+                <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
+              ))}
+            </select>
+            {errors.cliente_id && <div className="error-message">{errors.cliente_id}</div>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="plataforma" className="form-label">Plataforma</label>
+            <select
+              id="plataforma"
+              name="plataforma"
+              value={formData.plataforma}
+              onChange={handleChange}
+              className={`form-select ${errors.plataforma ? 'input-error' : ''}`}
+              required
+            >
+              <option value="">Selecione uma plataforma</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="ambos">Instagram e Facebook</option>
+            </select>
+            {errors.plataforma && <div className="error-message">{errors.plataforma}</div>}
+          </div>
+
+          <Input
+            label="Data da Publicação"
+            type="date"
+            id="data_publicacao"
+            name="data_publicacao"
+            value={formData.data_publicacao}
+            onChange={handleChange}
+            required
+            error={errors.data_publicacao}
+          />
+
+          <HoraSelector
+            value={formData.hora_publicacao}
+            onChange={handleChange}
+            error={errors.hora_publicacao}
+          />
+
+          <div className="form-group">
+            <label htmlFor="descricao" className="form-label">Legenda/Descrição</label>
+            <textarea
+              id="descricao"
+              name="descricao"
+              value={formData.descricao}
+              onChange={handleChange}
+              placeholder="Texto da legenda do post"
+              className="form-textarea"
+              rows="4"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="hashtags" className="form-label">Hashtags</label>
+            <textarea
+              id="hashtags"
+              name="hashtags"
+              value={formData.hashtags}
+              onChange={handleChange}
+              placeholder="#exemplo #hashtags #marketing"
+              className="form-textarea"
+              rows="2"
+            />
+          </div>
+
+          <ImageUploadField 
+            formData={formData}
+            setFormData={(newFormData) => {
+              setFormData(newFormData);
+              
+              if (onChange) {
+                onChange(newFormData, carouselImages);
+              }
+            }}
+            carouselImages={carouselImages}
+            setCarouselImages={(newImages) => {
+              setCarouselImages(newImages);
+              if (onChange) {
+                onChange(formData, newImages);
+              }
+            }}
+            errors={errors}
+          />
+
+          
+
+          <div className="form-actions">
+            {postSuccess ? (
+              <div className="success-message">Postagem agendada com sucesso!</div>
+            ) : (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Salvando...' : agendamento?.id ? 'Atualizar' : 'Agendar Post'}
+              </Button>
+            )}
+          </div>
+        </form>
       </div>
-
-      <div className="form-group">
-        <label htmlFor="plataforma" className="form-label">Plataforma</label>
-        <select
-          id="plataforma"
-          name="plataforma"
-          value={formData.plataforma}
-          onChange={handleChange}
-          className={`form-select ${errors.plataforma ? 'input-error' : ''}`}
-          required
-        >
-          <option value="">Selecione uma plataforma</option>
-          <option value="instagram">Instagram</option>
-          <option value="facebook">Facebook</option>
-          <option value="ambos">Instagram e Facebook</option>
-        </select>
-        {errors.plataforma && <div className="error-message">{errors.plataforma}</div>}
-      </div>
-
-      <Input
-        label="Data da Publicação"
-        type="date"
-        id="data_publicacao"
-        name="data_publicacao"
-        value={formData.data_publicacao}
-        onChange={handleChange}
-        required
-        error={errors.data_publicacao}
-      />
-
-      <HoraSelector
-        value={formData.hora_publicacao}
-        onChange={handleChange}
-        error={errors.hora_publicacao}
-      />
-
-      <div className="form-group">
-        <label htmlFor="descricao" className="form-label">Legenda/Descrição</label>
-        <textarea
-          id="descricao"
-          name="descricao"
-          value={formData.descricao}
-          onChange={handleChange}
-          placeholder="Texto da legenda do post"
-          className="form-textarea"
-          rows="4"
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="hashtags" className="form-label">Hashtags</label>
-        <textarea
-          id="hashtags"
-          name="hashtags"
-          value={formData.hashtags}
-          onChange={handleChange}
-          placeholder="#exemplo #hashtags #marketing"
-          className="form-textarea"
-          rows="2"
-        />
-      </div>
-
-      <ImageUploadField 
-        formData={formData}
-        setFormData={setFormData}
-        carouselImages={carouselImages}
-        setCarouselImages={setCarouselImages}
-        errors={errors}
-      />
-
-      {showPreview && (
-      <div className="mt-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4">Preview da Postagem</h3>
+      
+      <div className="preview-section">
         <PostPreview 
           formData={formData} 
           carouselImages={carouselImages}
+          clientes={clientes}
         />
       </div>
-      )}
-
-      <div className="form-actions">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : agendamento?.id ? 'Atualizar' : 'Agendar Post'}
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 };
 
-export default AgendamentoForm;
+export default PostForm;

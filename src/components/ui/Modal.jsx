@@ -47,6 +47,22 @@ const styles = {
     width: '95vw',
     height: '95vh'
   },
+
+  modalFullscreen: {
+    width: '95vw',
+    height: '95vh',
+    maxWidth: '95vw',
+    maxHeight: '95vh',
+    margin: 10,
+    borderRadius: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'absolute',
+    top: 10,
+    left: 35,
+    right: 0,
+    bottom: 0
+  },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -69,7 +85,9 @@ const styles = {
   },
   modalBody: {
     padding: '25px', 
-    fontSize: '1.05rem' 
+    fontSize: '1.05rem',
+    flex: 1,
+    overflowY: 'auto' 
   },
   modalFooter: {
     padding: '20px',
@@ -110,6 +128,7 @@ const Modal = ({
       case 'lg': return styles.modalLg;
       case 'xl': return styles.modalXl;
       case 'full': return styles.modalFull;
+      case 'fullscreen': return styles.modalFullscreen; // Nova opção
       default: return styles.modalLg; 
     }
   };
@@ -118,8 +137,17 @@ const Modal = ({
     e.stopPropagation();
   };
 
+  // Ajustando o overlay para fullscreen quando necessário
+  const overlayStyle = {
+    ...styles.modalOverlay,
+    ...(size === 'fullscreen' ? {
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start'
+    } : {})
+  };
+
   return (
-    <div style={styles.modalOverlay} onClick={onClose}>
+    <div style={overlayStyle} onClick={onClose}>
       <div style={{...styles.modal, ...getSizeStyle()}} onClick={handleModalContentClick}>
         <div style={styles.modalHeader}>
           <h3 style={styles.modalTitle}>{title}</h3>

@@ -3,7 +3,11 @@ import React, { useEffect } from 'react';
 const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselImages, errors }) => {
   // Função para lidar com a alteração do tipo de conteúdo
   const handleTipoConteudoChange = (e) => {
+
+    console.log('Event:', e);
+
     const tipoConteudo = e.target.value;
+    
     setFormData(prev => ({
       ...prev,
       tipoConteudo,
@@ -12,9 +16,11 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
       images: [],
     }));
     
-    if (tipoConteudo !== 'Carrossel') {
-      setCarouselImages([]);
-    }
+        // Atualiza o estado formData com o tipo de conteúdo selecionado
+        if (tipoConteudo !== 'Carrossel') {
+          setCarouselImages([]);
+        }
+    
   };
 
   // Função para lidar com o upload de arquivo único
@@ -128,7 +134,7 @@ const ImageUploadField = ({ formData, setFormData, carouselImages, setCarouselIm
               
               {carouselImages.length > 0 && (
                 <div className="carousel-images mt-4">
-                  <h4>Imagens do Carrossel ({carouselImages.length})</h4>
+                  {/* <h4>Imagens do Carrossel ({carouselImages.length})</h4> */}
                   <div className="image-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                     {carouselImages.map((img, index) => (
                       <div key={index} className="image-item" style={{ position: 'relative', width: '150px' }}>

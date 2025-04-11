@@ -2,7 +2,7 @@ import axios from 'axios';
 
 class WebhookService {
   constructor() {
-    this.webhookUrl = 'http://168.138.68.214:5678/webhook/e7f3081a-b31f-4009-aaf3-1afd0312967ff';
+    this.webhookUrl = 'http://168.138.68.214:5678/webhook-test/e7f3081a-b31f-4009-aaf3-1afd0312967f';
     this.username = process.env.REACT_APP_WEBHOOK_USERNAME;
     this.password = process.env.REACT_APP_WEBHOOK_PASSWORD;
   }
@@ -15,9 +15,21 @@ class WebhookService {
       // Determine if it's a carousel or single post
       const isCarousel = Array.isArray(postData.images) && postData.images.length > 1;
 
+      let idCarrousel = null;
+      if (isCarousel && postData.images) {
+        const uniqueId = Math.random().toString(36).substring(2, 15).toUpperCase();
+        idCarrousel = uniqueId;
+      } else {
+        postData.tipoConteudo = 'Single';
+        postData.imagem = postData.images[0];
+        postData.imagem_nome = postData.images[0].name;
+      }
+
+
       // Prepare the payload
       const payload = {
         type: isCarousel ? 'carousel' : 'single',
+        carousel_id: isCarousel ? idCarrousel : null,
         platform: postData.plataforma,
         scheduled_time: postData.data_publicacao,
         caption: this.formatCaption(postData.descricao, postData.hashtags),
@@ -42,8 +54,6 @@ class WebhookService {
           formData.append(`image_${index}`, image, image.name);
         });
       } else {
-
-        console.log('postData.imagem', postData.imagem);
         
         if (!postData.imagem || !postData.imagem.name) {
           throw new Error('Imagem inválida para postagem simples');

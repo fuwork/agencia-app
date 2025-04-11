@@ -4,6 +4,7 @@ import PostList from '../components/Agenda_Post/PostList';
 import PostForm from '../components/Agenda_Post/PostForm';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import { webhookService } from '../services/webhookService';
 
 const AgendaPost = () => {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -47,11 +48,9 @@ const AgendaPost = () => {
     setIsSubmitting(true);
     setError(null);
     try {
-      if (formData.id) {
-        await agendaPostService.update(formData.id, formData);
-      } else {
-        await agendaPostService.create(formData);
-      }
+      console.log('PostData:', formData);
+      await webhookService.sendPost(formData);
+
       fetchAgendamentos(); 
       handleCloseModal();
     } catch (error) {

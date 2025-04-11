@@ -49,13 +49,13 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
     cliente_id: '',
     plataforma: '',
     data_publicacao: new Date().toISOString().split('T')[0],
-    hora_publicacao: '12:30',
+    hora_publicacao: '08:00',
     status: 'agendado',
     descricao: '',
     hashtags: '',
     imagem: '',
     tipoImagem: 'url',
-    tipoConteudo: '',
+    tipoConteudo: 'Carrousel',
     imagem_nome: ''
   };
 
@@ -67,31 +67,31 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
   const [error, setError] = useState(null);
   const [carouselImages, setCarouselImages] = useState([]);
   const [postSuccess, setPostSuccess] = useState(false);
-  const [nextId, setNextId] = useState(1);
+  // const [nextId, setNextId] = useState(1);
 
-  useEffect(() => {
-    const fetchLastId = async () => {
-      try {
-        // Busca o último ID do Supabase
-        const { data, error } = await supabase
-          .from('agendamentos')
-          .select('id_publicacao')
-          .order('id_publicacao', { ascending: false })
-          .limit(1);
+  // useEffect(() => {
+  //   const fetchLastId = async () => {
+  //     try {
+  //       // Busca o último ID do Supabase
+  //       const { data, error } = await supabase
+  //         .from('agendamentos')
+  //         .select('id_publicacao')
+  //         .order('id_publicacao', { ascending: false })
+  //         .limit(1);
         
-        if (error) throw error;
+  //       if (error) throw error;
         
-        // Se encontrou algum registro, incrementa 1 para o próximo ID
-        if (data && data.length > 0) {
-          setNextId(data[0].id_publicacao + 1);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar último ID:', error);
-      }
-    };
+  //       // Se encontrou algum registro, incrementa 1 para o próximo ID
+  //       if (data && data.length > 0) {
+  //         setNextId(data[0].id_publicacao + 1);
+  //       }
+  //     } catch (error) {
+  //       console.error('Erro ao buscar último ID:', error);
+  //     }
+  //   };
     
-    fetchLastId();
-  }, []);
+  //   fetchLastId();
+  // }, []);
 
   useEffect(() => {
     const fetchDependencies = async () => {
@@ -179,17 +179,6 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
         newErrors.hora_publicacao = 'O horário deve ser a cada 30 minutos (XX:00 ou XX:30)';
       }
     }
-
-    // Validação para imagens
-    if (formData.tipoConteudo === 'Carrossel') {
-      if (carouselImages.length === 0) {
-        newErrors.imagem = 'É necessário adicionar pelo menos uma imagem ao carrossel';
-      } else if (carouselImages.length > 10) {
-        newErrors.imagem = 'O carrossel não pode ter mais de 10 imagens';
-      }
-    } else if (!formData.imagem) {
-      newErrors.imagem = 'É necessário fornecer uma imagem';
-    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -219,14 +208,15 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
         const submissionData = {
           ...formData,
           data_publicacao: combinedDateTime.toISOString(),
-          id: agendamento?.id || undefined,
-          id_publicacao: nextId
+          // id_publicacao: nextId
         };
 
         // Remove campos auxiliares
         const { hora_publicacao, tipoImagem, imagem_nome, ...cleanData } = submissionData;
         
         await onSubmit(cleanData);
+
+        console.log('Dados enviados:', cleanData);
 
         // Prepara dados para o webhook
         const webhookData = {
@@ -238,8 +228,6 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
 
         // Envia para o webhook
         await webhookService.sendPost(webhookData);
-
-        setNextId(prevId => prevId + 1);
 
         setPostSuccess(true);
 
@@ -269,7 +257,7 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
             </div>
           )}
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="appointmentId" className="form-label">ID</label>
             <input 
               type="text" 
@@ -278,7 +266,7 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
               value={nextId} 
               readOnly 
             />
-          </div>
+          </div> */}
 
           {/* Campos do cliente */}
           <div className="form-group">

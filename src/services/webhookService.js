@@ -2,7 +2,7 @@ import axios from 'axios';
 
 class WebhookService {
   constructor() {
-    this.webhookUrl = 'http://168.138.68.214:5678/webhook-test/e7f3081a-b31f-4009-aaf3-1afd0312967f';
+    this.webhookUrl = 'https://n8n.fuwork.com.br/webhook-test/e7f3081a-b31f-4009-aaf3-1afd0312967f';
     this.username = process.env.REACT_APP_WEBHOOK_USERNAME;
     this.password = process.env.REACT_APP_WEBHOOK_PASSWORD;
   }
@@ -45,7 +45,9 @@ class WebhookService {
 
         // Adicionar array carousel_items ao payload
         payload.carousel_items = postData.images.map((image, index) => ({
-          fileName: image.name,
+
+          // vamos alterar o fileName juntando o momento atual com o nome da imagem hhmmss
+          fileName: `${Date.now()}_${image.name}`,
           order: index + 1, // Ordem começando em 1
         }));
 
@@ -59,8 +61,10 @@ class WebhookService {
           throw new Error('Imagem inválida para postagem simples');
         }
         // Anexar imagem única ao FormData
-        payload.fileName = postData.imagem.name;
-        formData.append('image', postData.imagem, postData.imagem.name);
+        // vamos alterar o fileName juntando o momento atual com o nome da imagem hhmmss
+        const fileName = `${Date.now()}_${postData.imagem.name}`;
+        postData.fileName = fileName;
+        formData.append('image', postData.imagem, fileName);
       }
 
       // Adicionar o payload como string JSON

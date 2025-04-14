@@ -52,13 +52,15 @@ class WebhookService {
         // Adicionar array carousel_items ao payload
         payload.carousel_items = postData.images.map((image, index) => ({
           // vamos alterar o fileName juntando o momento atual com o nome da imagem hhmmss
-          fileName: `${Date.now()}_${image.name}`,
+          fileName: this.formatFileName(image.name),
           order: index + 1, // Ordem começando em 1
         }));
 
         // Anexar imagens ao FormData
         postData.images.forEach((image, index) => {
-          formData.append(`image_${index}`, image, image.name);
+
+          const fileName = this.formatFileName(image.name);
+          formData.append(`image_${index}`, image, fileName);
         });
       } else {
         if (!postData.imagem || !postData.imagem.name) {
@@ -66,8 +68,7 @@ class WebhookService {
         }
         // Anexar imagem única ao FormData
         // vamos alterar o fileName juntando o momento atual com o nome da imagem hhmmss
-        const fileName = `${Date.now()}_${postData.imagem.name}`;
-        postData.fileName = fileName;
+        const fileName = this.formatFileName(postData.imagem.name);
         formData.append("image", postData.imagem, fileName);
       }
 
@@ -119,6 +120,14 @@ class WebhookService {
     }
     return true;
   }
+
+  formatFileName(fileName){
+    const fileNameFormatted = `${Date.now()}_${fileName}`;
+    return fileNameFormatted;
+  }
+
 }
+
+
 
 export const webhookService = new WebhookService();

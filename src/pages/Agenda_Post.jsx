@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { agendaPostService } from '../services/agendaPost';
+import { agendaPostService } from '../services/agendamentoSerivce';
 import PostList from '../components/Agenda_Post/PostList';
 import PostForm from '../components/Agenda_Post/PostForm';
 import Modal from '../components/ui/Modal';

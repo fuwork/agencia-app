@@ -2123,7 +2123,7 @@ body {
 }
 
 .ant-row.ant-form-item.username .ant-col.ant-form-item-label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: #141414;
 }
@@ -3035,3 +3035,4 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile
   path {
   fill: #8c8c8c;
 }
+

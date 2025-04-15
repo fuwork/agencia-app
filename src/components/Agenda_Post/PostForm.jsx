@@ -6,6 +6,7 @@ import PostPreview from './PostPreview';
 import { clienteService } from '../../services/clienteService';
 import { webhookService } from '../../services/webhookService';
 import { supabase } from '../../services/supabase';
+import { DateTime } from 'luxon';
 
 const HoraSelector = ({ value, onChange, error }) => {
   // Gera horários das 7:00 às 22:00 
@@ -44,11 +45,17 @@ const HoraSelector = ({ value, onChange, error }) => {
   );
 };
 
+
+
+let scheduled_time = DateTime.now().setZone('America/Sao_Paulo');
+
+console.log("Horario para Initial State: ", scheduled_time.toString());
+
 const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onChange }) => {
   const initialState = {
     cliente_id: '',
     plataforma: '',
-    data_publicacao: new Date().toISOString().split('T')[0],
+    data_publicacao: scheduled_time.toString().split('T')[0],
     hora_publicacao: '08:00',
     status: 'agendado',
     descricao: '',
@@ -123,8 +130,9 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
     let hora = '12:30';
     
     if (agendamento.data_publicacao) {
-      const dataObj = new Date(agendamento.data_publicacao);
-      data = dataObj.toISOString().split('T')[0];
+      const dataObj = DateTime.fromISO(agendamento.data_publicacao).setZone('America/Sao_Paulo');
+      console.log("Data do agendamento: ", dataObj.toString());
+      data = dataObj.toString().split('T')[0];
       const horas = dataObj.getHours();
       const minutos = dataObj.getMinutes();
       const ajusteMinutos = minutos < 30 ? '00' : '30';
@@ -202,12 +210,13 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
       
       try {
         // Combina data e hora
-        const combinedDateTime = new Date(`${formData.data_publicacao}T${formData.hora_publicacao}`);
+        const dateString = new Date(`${formData.data_publicacao}T${formData.hora_publicacao}`);
+        const combinedDateTime = DateTime.fromISO(dateString.toISOString()).setZone('America/Sao_Paulo');
         
         // Prepara dados para envio
         const submissionData = {
           ...formData,
-          data_publicacao: combinedDateTime.toISOString(),
+          data_publicacao: combinedDateTime,
           // id_publicacao: nextId
         };
 

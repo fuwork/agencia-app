@@ -8,15 +8,46 @@ import { webhookService } from '../../services/webhookService';
 import { supabase } from '../../services/supabase';
 import { DateTime } from 'luxon';
 
-const HoraSelector = ({ value, onChange, error }) => {
-  // Gera horários das 7:00 às 22:00 
+const HoraSelector = ({ value, onChange, error, dataPublicacao }) => {
+  const agora = DateTime.now().setZone('America/Sao_Paulo');
+  const dataAtual = agora.toISODate();
+  
+  // Determina se a data selecionada é o dia atual
+  const isToday = dataPublicacao === dataAtual;
+  
+  // Gera horários das 7:00 às 22:00
   const horarios = [];
+  const horaAtual = agora.hour;
+  const minutoAtual = agora.minute;
+  
   for (let hora = 7; hora <= 22; hora++) {
-    horarios.push(`${String(hora).padStart(2, '0')}:00`);  
+    // Para o dia atual, só mostra horários futuros
+    if (!isToday || hora > horaAtual || (hora === horaAtual && minutoAtual < 30)) {
+      horarios.push(`${String(hora).padStart(2, '0')}:00`);
+    }
+    
     if (hora < 22) {
-      horarios.push(`${String(hora).padStart(2, '0')}:30`);
+      // Para o dia atual, só mostra horários futuros
+      if (!isToday || hora > horaAtual || (hora === horaAtual && minutoAtual < 30)) {
+        horarios.push(`${String(hora).padStart(2, '0')}:30`);
+      }
     }
   }
+
+  // Se não houver horários disponíveis, adiciona uma mensagem
+  if (horarios.length === 0) {
+    horarios.push("Sem horários disponíveis para hoje");
+  }
+
+  // Verifica se o valor atual está na lista de horários disponíveis
+  useEffect(() => {
+    if (isToday && value && !horarios.includes(value)) {
+      // Se o horário selecionado não estiver disponível, seleciona o primeiro disponível
+      if (horarios.length > 0 && horarios[0] !== "Sem horários disponíveis para hoje") {
+        onChange({ target: { name: 'hora_publicacao', value: horarios[0] } });
+      }
+    }
+  }, [isToday, value, horarios]);
 
   return (
     <div className="form-group">
@@ -33,6 +64,7 @@ const HoraSelector = ({ value, onChange, error }) => {
         })}
         className={`form-select ${error ? 'input-error' : ''}`}
         required
+        disabled={horarios[0] === "Sem horários disponíveis para hoje"}
       >
         {horarios.map((horario) => (
           <option key={horario} value={horario}>
@@ -45,7 +77,26 @@ const HoraSelector = ({ value, onChange, error }) => {
   );
 };
 
-
+const DateSelector = ({ value, onChange, error }) => {
+  const hoje = DateTime.now().setZone('America/Sao_Paulo').toISODate();
+  
+  return (
+    <div className="form-group">
+      <label htmlFor="data_publicacao" className="form-label">Data da Publicação</label>
+      <input
+        type="date"
+        id="data_publicacao"
+        name="data_publicacao"
+        value={value}
+        onChange={onChange}
+        min={hoje}
+        className={`form-control ${error ? 'input-error' : ''}`}
+        required
+      />
+      {error && <div className="error-message">{error}</div>}
+    </div>
+  );
+};
 
 let scheduled_time = DateTime.now().setZone('America/Sao_Paulo');
 
@@ -55,7 +106,7 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
   const initialState = {
     cliente_id: '',
     plataforma: '',
-    data_publicacao: scheduled_time.toString().split('T')[0],
+    data_publicacao: scheduled_time.toISODate(), 
     hora_publicacao: '08:00',
     status: 'agendado',
     descricao: '',
@@ -74,31 +125,6 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
   const [error, setError] = useState(null);
   const [carouselImages, setCarouselImages] = useState([]);
   const [postSuccess, setPostSuccess] = useState(false);
-  // const [nextId, setNextId] = useState(1);
-
-  // useEffect(() => {
-  //   const fetchLastId = async () => {
-  //     try {
-  //       // Busca o último ID do Supabase
-  //       const { data, error } = await supabase
-  //         .from('agendamentos')
-  //         .select('id_publicacao')
-  //         .order('id_publicacao', { ascending: false })
-  //         .limit(1);
-        
-  //       if (error) throw error;
-        
-  //       // Se encontrou algum registro, incrementa 1 para o próximo ID
-  //       if (data && data.length > 0) {
-  //         setNextId(data[0].id_publicacao + 1);
-  //       }
-  //     } catch (error) {
-  //       console.error('Erro ao buscar último ID:', error);
-  //     }
-  //   };
-    
-  //   fetchLastId();
-  // }, []);
 
   useEffect(() => {
     const fetchDependencies = async () => {
@@ -132,11 +158,26 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
     if (agendamento.data_publicacao) {
       const dataObj = DateTime.fromISO(agendamento.data_publicacao).setZone('America/Sao_Paulo');
       console.log("Data do agendamento: ", dataObj.toString());
-      data = dataObj.toString().split('T')[0];
-      const horas = dataObj.getHours();
-      const minutos = dataObj.getMinutes();
-      const ajusteMinutos = minutos < 30 ? '00' : '30';
-      hora = `${String(horas).padStart(2, '0')}:${ajusteMinutos}`;
+      
+      // Verifica se a data é no passado, se for, usa a data atual
+      const agora = DateTime.now().setZone('America/Sao_Paulo');
+      if (dataObj < agora) {
+        data = agora.toISODate();
+        // Ajusta hora também para próximo slot disponível
+        const horaAtual = agora.hour;
+        const minutoAtual = agora.minute;
+        if (minutoAtual < 30) {
+          hora = `${String(horaAtual).padStart(2, '0')}:30`;
+        } else {
+          hora = `${String(horaAtual + 1).padStart(2, '0')}:00`;
+        }
+      } else {
+        data = dataObj.toISODate();
+        const horas = dataObj.hour;
+        const minutos = dataObj.minute;
+        const ajusteMinutos = minutos < 30 ? '00' : '30';
+        hora = `${String(horas).padStart(2, '0')}:${ajusteMinutos}`;
+      }
     }
 
     // Determina tipo de imagem
@@ -173,18 +214,39 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
 
   const validate = () => {
     const newErrors = {};
+    const agora = DateTime.now().setZone('America/Sao_Paulo');
+    const dataPublicacao = DateTime.fromISO(formData.data_publicacao);
     
     if (!formData.cliente_id) newErrors.cliente_id = 'Cliente é obrigatório';
     if (!formData.plataforma) newErrors.plataforma = 'Plataforma é obrigatória';
-    if (!formData.data_publicacao) newErrors.data_publicacao = 'Data é obrigatória';
+    
+    // Validação da data
+    if (!formData.data_publicacao) {
+      newErrors.data_publicacao = 'Data é obrigatória';
+    } else if (dataPublicacao < agora.startOf('day')) {
+      newErrors.data_publicacao = 'A data não pode ser no passado';
+    }
     
     // Validação do horário
     if (!formData.hora_publicacao) {
       newErrors.hora_publicacao = 'Horário é obrigatório';
     } else {
-      const [_, minutes] = formData.hora_publicacao.split(':');
-      if (minutes !== '00' && minutes !== '30') {
+      const [horaStr, minutosStr] = formData.hora_publicacao.split(':');
+      const hora = parseInt(horaStr, 10);
+      const minutos = parseInt(minutosStr, 10);
+      
+      if (minutos !== 0 && minutos !== 30) {
         newErrors.hora_publicacao = 'O horário deve ser a cada 30 minutos (XX:00 ou XX:30)';
+      }
+      
+      // Verifica se a data e hora combinadas são no passado
+      if (dataPublicacao.equals(agora.startOf('day'))) {
+        const horaAtual = agora.hour;
+        const minutoAtual = agora.minute;
+        
+        if (hora < horaAtual || (hora === horaAtual && minutos <= minutoAtual)) {
+          newErrors.hora_publicacao = 'O horário não pode ser no passado';
+        }
       }
     }
     
@@ -217,7 +279,6 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
         const submissionData = {
           ...formData,
           data_publicacao: combinedDateTime,
-          // id_publicacao: nextId
         };
 
         // Remove campos auxiliares
@@ -266,18 +327,6 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
             </div>
           )}
 
-          {/* <div className="form-group">
-            <label htmlFor="appointmentId" className="form-label">ID</label>
-            <input 
-              type="text" 
-              id="appointmentId" 
-              className="form-control" 
-              value={nextId} 
-              readOnly 
-            />
-          </div> */}
-
-          {/* Campos do cliente */}
           <div className="form-group">
             <label htmlFor="cliente_id" className="form-label">Cliente</label>
             <select
@@ -314,14 +363,9 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
             {errors.plataforma && <div className="error-message">{errors.plataforma}</div>}
           </div>
 
-          <Input
-            label="Data da Publicação"
-            type="date"
-            id="data_publicacao"
-            name="data_publicacao"
+          <DateSelector
             value={formData.data_publicacao}
             onChange={handleChange}
-            required
             error={errors.data_publicacao}
           />
 
@@ -329,6 +373,7 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
             value={formData.hora_publicacao}
             onChange={handleChange}
             error={errors.hora_publicacao}
+            dataPublicacao={formData.data_publicacao}
           />
 
           <div className="form-group">
@@ -375,8 +420,6 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
             }}
             errors={errors}
           />
-
-          
 
           <div className="form-actions">
             {postSuccess ? (

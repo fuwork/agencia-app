@@ -3036,3 +3036,51 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile
   fill: #8c8c8c;
 }
 
+.hashtag-input-wrapper {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  min-height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  background: white;
+  gap: 0.25rem;
+}
+
+.hashtag-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-grow: 1;
+}
+
+.hashtag-tag {
+  background-color: #edf2f7;
+  color: #2d3748;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+}
+
+.hashtag-remove {
+  background: none;
+  border: none;
+  margin-left: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  color: #718096;
+}
+
+.hashtag-input {
+  flex-grow: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+}

@@ -5,7 +5,7 @@ import ImageUploadField from './ImageUpload';
 import PostPreview from './PostPreview'; 
 import { clienteService } from '../../services/clienteService';
 import { webhookService } from '../../services/webhookService';
-import { supabase } from '../../services/supabase';
+import HashtagInput from '../HashTag/Input';
 import { DateTime } from 'luxon';
 
 const HoraSelector = ({ value, onChange, error, dataPublicacao }) => {
@@ -15,64 +15,95 @@ const HoraSelector = ({ value, onChange, error, dataPublicacao }) => {
   // Determina se a data selecionada é o dia atual
   const isToday = dataPublicacao === dataAtual;
   
-  // Gera horários das 7:00 às 22:00
-  const horarios = [];
-  const horaAtual = agora.hour;
-  const minutoAtual = agora.minute;
+  // Função para validar o formato do horário
+  const validateTimeFormat = (timeStr) => {
+    // Regex para validar o formato HH:MM (00:00 a 23:59)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    return timeRegex.test(timeStr);
+  };
   
-  for (let hora = 7; hora <= 22; hora++) {
-    // Para o dia atual, só mostra horários futuros
-    if (!isToday || hora > horaAtual || (hora === horaAtual && minutoAtual < 30)) {
-      horarios.push(`${String(hora).padStart(2, '0')}:00`);
+  // Função para validar se o horário é futuro (quando for hoje)
+  const validateFutureTime = (timeStr) => {
+    if (!isToday) return true;
+    
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const currentHour = agora.hour;
+    const currentMinute = agora.minute;
+    
+    // Se a hora é maior, já é futuro
+    if (hours > currentHour) return true;
+    // Se a hora é igual, os minutos precisam ser maiores
+    if (hours === currentHour && minutes > currentMinute) return true;
+    
+    return false;
+  };
+  
+  // Função para lidar com a validação completa ao mudar o valor
+  const handleTimeChange = (e) => {
+    const newValue = e.target.value;
+    
+    // Sempre atualiza o estado para dar feedback ao usuário
+    onChange({ 
+      target: { 
+        name: 'hora_publicacao', 
+        value: newValue
+      } 
+    });
+  };
+
+  // Função para verificar a validade ao perder o foco
+  const handleBlur = (e) => {
+    const timeValue = e.target.value;
+    
+    if (!validateTimeFormat(timeValue)) {
+      // Se o formato estiver inválido, destaca o erro
+      onChange({ 
+        target: { 
+          name: 'hora_publicacao_error', 
+          value: 'Formato inválido. Use HH:MM (ex: 08:30)'
+        } 
+      });
+      return;
     }
     
-    if (hora < 22) {
-      // Para o dia atual, só mostra horários futuros
-      if (!isToday || hora > horaAtual || (hora === horaAtual && minutoAtual < 30)) {
-        horarios.push(`${String(hora).padStart(2, '0')}:30`);
-      }
+    if (isToday && !validateFutureTime(timeValue)) {
+      // Se o horário for no passado, destaca o erro
+      onChange({ 
+        target: { 
+          name: 'hora_publicacao_error', 
+          value: 'O horário precisa ser no futuro'
+        } 
+      });
+      return;
     }
-  }
-
-  // Se não houver horários disponíveis, adiciona uma mensagem
-  if (horarios.length === 0) {
-    horarios.push("Sem horários disponíveis para hoje");
-  }
-
-  // Verifica se o valor atual está na lista de horários disponíveis
-  useEffect(() => {
-    if (isToday && value && !horarios.includes(value)) {
-      // Se o horário selecionado não estiver disponível, seleciona o primeiro disponível
-      if (horarios.length > 0 && horarios[0] !== "Sem horários disponíveis para hoje") {
-        onChange({ target: { name: 'hora_publicacao', value: horarios[0] } });
-      }
-    }
-  }, [isToday, value, horarios]);
+    
+    // Se passou nas validações, limpa os erros
+    onChange({ 
+      target: { 
+        name: 'hora_publicacao_error', 
+        value: null
+      } 
+    });
+  };
 
   return (
     <div className="form-group">
       <label htmlFor="hora_publicacao" className="form-label">Horário da Publicação</label>
-      <select
+      <input
+        type="text"
         id="hora_publicacao"
         name="hora_publicacao"
         value={value}
-        onChange={(e) => onChange({ 
-          target: { 
-            name: 'hora_publicacao', 
-            value: e.target.value
-          } 
-        })}
-        className={`form-select ${error ? 'input-error' : ''}`}
+        onChange={handleTimeChange}
+        onBlur={handleBlur}
+        placeholder="HH:MM (ex: 08:30)"
+        className={`form-control ${error ? 'input-error' : ''}`}
         required
-        disabled={horarios[0] === "Sem horários disponíveis para hoje"}
-      >
-        {horarios.map((horario) => (
-          <option key={horario} value={horario}>
-            {horario}
-          </option>
-        ))}
-      </select>
+      />
       {error && <div className="error-message">{error}</div>}
+      <small className="form-text text-muted">
+        Digite o horário no formato HH:MM (ex: 07:15, 14:30)
+      </small>
     </div>
   );
 };
@@ -231,21 +262,24 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
     if (!formData.hora_publicacao) {
       newErrors.hora_publicacao = 'Horário é obrigatório';
     } else {
-      const [horaStr, minutosStr] = formData.hora_publicacao.split(':');
-      const hora = parseInt(horaStr, 10);
-      const minutos = parseInt(minutosStr, 10);
+      // Regex para validar o formato HH:MM
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
       
-      if (minutos !== 0 && minutos !== 30) {
-        newErrors.hora_publicacao = 'O horário deve ser a cada 30 minutos (XX:00 ou XX:30)';
-      }
-      
-      // Verifica se a data e hora combinadas são no passado
-      if (dataPublicacao.equals(agora.startOf('day'))) {
-        const horaAtual = agora.hour;
-        const minutoAtual = agora.minute;
+      if (!timeRegex.test(formData.hora_publicacao)) {
+        newErrors.hora_publicacao = 'Formato de hora inválido. Use HH:MM (ex: 08:30)';
+      } else {
+        const [horaStr, minutosStr] = formData.hora_publicacao.split(':');
+        const hora = parseInt(horaStr, 10);
+        const minutos = parseInt(minutosStr, 10);
         
-        if (hora < horaAtual || (hora === horaAtual && minutos <= minutoAtual)) {
-          newErrors.hora_publicacao = 'O horário não pode ser no passado';
+        // Verifica se a data e hora combinadas são no passado
+        if (dataPublicacao.equals(agora.startOf('day'))) {
+          const horaAtual = agora.hour;
+          const minutoAtual = agora.minute;
+          
+          if (hora < horaAtual || (hora === horaAtual && minutos <= minutoAtual)) {
+            newErrors.hora_publicacao = 'O horário não pode ser no passado';
+          }
         }
       }
     }
@@ -389,18 +423,10 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="hashtags" className="form-label">Hashtags</label>
-            <textarea
-              id="hashtags"
-              name="hashtags"
-              value={formData.hashtags}
-              onChange={handleChange}
-              placeholder="#exemplo #hashtags #marketing"
-              className="form-textarea"
-              rows="2"
-            />
-          </div>
+          <HashtagInput
+          value={formData.hashtags}
+          onChange={handleChange}
+          />
 
           <ImageUploadField 
             formData={formData}

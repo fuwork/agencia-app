@@ -48,8 +48,8 @@ const AgendaPost = () => {
     setIsSubmitting(true);
     setError(null);
     try {
-      console.log('PostData:', formData);
-      await webhookService.sendPost(formData);
+      // console.log('PostData:', formData);
+      // await webhookService.sendPost(formData);
 
       fetchAgendamentos(); 
       handleCloseModal();

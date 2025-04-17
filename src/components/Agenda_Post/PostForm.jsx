@@ -138,7 +138,7 @@ const PostForm = ({ agendamento = {}, onSubmit, onClose, isLoading = false, onCh
     cliente_id: '',
     plataforma: '',
     data_publicacao: scheduled_time.toISODate(), 
-    hora_publicacao: '08:00',
+    hora_publicacao: scheduled_time.toFormat('HH:mm'),
     status: 'agendado',
     descricao: '',
     hashtags: '',

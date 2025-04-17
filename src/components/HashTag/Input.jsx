@@ -11,7 +11,7 @@ const HashtagInput = ({ value, onChange }) => {
   }, [value]);
 
   const handleKeyDown = (e) => {
-    if ((e.key === ' ' || e.key === '   ') && inputValue.trim() !== '') {
+    if ((e.key === ' ' || e.key === 'Tab') && inputValue.trim() !== '') {
       e.preventDefault();
       addTag(inputValue.trim());
     } else if (e.key === 'Backspace' && inputValue === '' && tags.length > 0) {

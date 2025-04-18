@@ -1,41 +1,47 @@
-import crypto from 'node:crypto';
+// Util usando Web Crypto API compatível com Node.js
 
-export class CredentialEncryptor {
-  constructor(secretKeyBase64) {
-    this.key = Buffer.from(secretKeyBase64, 'base64');
-  }
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
-  encrypt(data) {
-    const iv = crypto.randomBytes(12);
-    const cipher = crypto.createCipheriv('aes-256-gcm', this.key, iv);
+// Recebe uma chave base64 de 32 bytes
+export async function getKey(secretBase64) {
+  const rawKey = Uint8Array.from(atob(secretBase64), c => c.charCodeAt(0));
+  return await window.crypto.subtle.importKey(
+    'raw',
+    rawKey,
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
 
-    const encrypted = Buffer.concat([
-      cipher.update(JSON.stringify(data), 'utf8'),
-      cipher.final()
-    ]);
+export async function encrypt(data, secretBase64) {
+  const key = await getKey(secretBase64);
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encoded = encoder.encode(JSON.stringify(data));
 
-    const tag = cipher.getAuthTag();
+  const ciphertextBuffer = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoded
+  );
 
-    return {
-      iv: iv.toString('base64'),
-      ciphertext: encrypted.toString('base64'),
-      tag: tag.toString('base64')
-    };
-  }
+  return {
+    iv: btoa(String.fromCharCode(...iv)),
+    ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertextBuffer)))
+  };
+}
 
-  decrypt({ iv, ciphertext, tag }) {
-    const decipher = crypto.createDecipheriv(
-      'aes-256-gcm',
-      this.key,
-      Buffer.from(iv, 'base64')
-    );
-    decipher.setAuthTag(Buffer.from(tag, 'base64'));
+export async function decrypt({ iv, ciphertext }, secretBase64) {
+  const key = await getKey(secretBase64);
+  const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+  const ciphertextBytes = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
 
-    const decrypted = Buffer.concat([
-      decipher.update(Buffer.from(ciphertext, 'base64')),
-      decipher.final()
-    ]);
+  const decryptedBuffer = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: ivBytes },
+    key,
+    ciphertextBytes
+  );
 
-    return JSON.parse(decrypted.toString('utf8'));
-  }
+  return JSON.parse(decoder.decode(decryptedBuffer));
 }

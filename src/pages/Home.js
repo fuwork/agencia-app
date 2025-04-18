@@ -447,7 +447,7 @@ function Home() {
           <Col xs={24} sm={24} md={12} lg={12} xl={8} className="mb-24">
             <Card bordered={false} className="criclebox h-full">
               <div className="timeline-box">
-                <Title level={5}>Histórico</Title>
+                <Title level={5}>Histórico de Postagem</Title>
                 <Paragraph className="lastweek" style={{ marginBottom: 24 }}>
 
                 </Paragraph>

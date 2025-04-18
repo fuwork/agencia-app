@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import UserProfile from '../../pages/Profile';
+import CredenciaisModal from "../Credenciais/CredencaisModal";
 
 import {
   Row,
@@ -21,18 +22,6 @@ import styled from "styled-components";
 const ButtonContainer = styled.div`
   .ant-btn-primary {
     background-color: #1890ff;
-  }
-  .ant-btn-success {
-    background-color: #52c41a;
-  }
-  .ant-btn-yellow {
-    background-color: #fadb14;
-  }
-  .ant-btn-black {
-    background-color: #262626;
-    color: #fff;
-    border: 0px;
-    border-radius: 5px;
   }
   .ant-switch-active {
     background-color: #1890ff;
@@ -132,6 +121,7 @@ function Header({
 
   const showDrawer = () => setVisible(true);
   const hideDrawer = () => setVisible(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <>
@@ -190,86 +180,26 @@ function Header({
             <div layout="vertical">
               <div className="header-top">
                 <Title level={4}>
-                  Configurator
-                  <Text className="subtitle">Veja as configurações do Dashboard</Text>
+                  Configurações
+                  <Text className="subtitle">Veja as configurações da Aplicação</Text>
                 </Title>
               </div>
 
               <div className="sidebar-color">
-                <Title level={5}>Cores</Title>
-                <div className="theme-color mb-2">
-                  <ButtonContainer>
-                    <Button
-                      type="primary"
-                      onClick={() => handleSidenavColor("#1890ff")}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      type="success"
-                      onClick={() => handleSidenavColor("#52c41a")}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      type="danger"
-                      onClick={() => handleSidenavColor("#d9363e")}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      type="yellow"
-                      onClick={() => handleSidenavColor("#fadb14")}
-                    >
-                      1
-                    </Button>
+        <Title level={5}>Credenciais</Title>
 
-                    <Button
-                      type="black"
-                      onClick={() => handleSidenavColor("#111")}
-                    >
-                      1
-                    </Button>
-                  </ButtonContainer>
-                </div>
+        <ButtonContainer>
+          <Button type="primary" onClick={() => setModalOpen(true)}>
+            Cadastrar Credencial
+          </Button>
+          </ButtonContainer>
+         </div>
+        <CredenciaisModal open={modalOpen} onClose={() => setModalOpen(false)} />
 
-                <div className="sidebarnav-color mb-2">
-                  <Title level={5}>Barra de Navegação</Title>
-                  <ButtonContainer className="trans">
-                    <Button
-                      type={sidenavType === "transparent" ? "primary" : "white"}
-                      onClick={() => {
-                        handleSidenavType("transparent");
-                        setSidenavType("transparent");
-                      }}
-                    >
-                      TRANSPARENTE
-                    </Button>
-                    <Button
-                      type={sidenavType === "white" ? "primary" : "white"}
-                      onClick={() => {
-                        handleSidenavType("#fff");
-                        setSidenavType("white");
-                      }}
-                    >
-                      BRANCO
-                    </Button>
-                  </ButtonContainer>
-                </div>
-                <div className="fixed-nav mb-2">
-                  <Title level={5}>Fixar Barra </Title>
-                  <Switch onChange={(e) => handleFixedNavbar(e)} />
-                </div>
-                <div className="ant-docment">
-                </div>
-                <div className="ant-thank">
-                </div>
-              </div>
-            </div>
-          </Drawer>
-          <Link to="/Sign-in" className="btn-sign-in">
-             <UserProfile />
-          </Link>
+        </div>
+        </Drawer>
+        <Link to="/Sign-in" className="btn-sign-in"> <UserProfile />
+        </Link>
           
         </Col>
       </Row>

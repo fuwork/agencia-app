@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import UserProfile from '../../pages/Profile';
 import CredenciaisModal from "../Credenciais/CredencaisModal";
 
@@ -108,14 +110,14 @@ function Header({
   name,
   subName,
   onPress,
-  handleSidenavColor,
-  handleSidenavType,
-  handleFixedNavbar,
 }) {
   const { Title, Text } = Typography;
 
   const [visible, setVisible] = useState(false);
-  const [sidenavType, setSidenavType] = useState("transparent");
+  const history = useHistory();
+  const location = useLocation();
+  const isSettingsPage = location.pathname === "/configuracoes";
+
 
   useEffect(() => window.scrollTo(0, 0));
 
@@ -159,9 +161,10 @@ function Header({
               </a>
             </Dropdown>
           </Badge>
-          <Button type="link" onClick={showDrawer}>
+          <Button type="link" onClick={() => history.push("/configuration")}>
             {logsetting}
           </Button>
+          {!isSettingsPage && (
           <Button
             type="link"
             className="sidebar-toggler"
@@ -169,6 +172,7 @@ function Header({
           >
             {toggler}
           </Button>
+          )}
           <Drawer
             className="settings-drawer"
             mask={true}

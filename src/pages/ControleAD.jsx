@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { supabase } from '../services/supabase';
 import Card from '../components/Controle/Card';
@@ -12,7 +11,7 @@ const ControlePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCliente, setSelectedCliente] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const history = useHistory();
+
 
   useEffect(() => {
     fetchclientes();
@@ -51,13 +50,6 @@ const ControlePage = () => {
 
   return (
     <Container className="py-4">
-      <Button  
-        onClick={() => history.goBack()}
-        className="mb-3"
-      >
-        &larr; Voltar
-      </Button>
-      
       <h1 className="mb-4">Controle de Campanhas por Cliente</h1>
       
       <Row className="mb-4">

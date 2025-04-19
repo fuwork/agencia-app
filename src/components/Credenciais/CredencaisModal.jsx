@@ -1,29 +1,29 @@
-import { Modal, Form, Input, message, Select } from "antd";
+// src/components/configuracao/CredenciaisForm.jsx
+
+import { Form, Input, message, Select, Button } from "antd";
 import { useEffect, useState } from "react";
 import { supabase } from "../../services/supabase";
 import { encrypt } from "../../utils/CredentialEncryptor";
 
-const {Option} = Select;
+const { Option } = Select;
 
-export default function CredenciaisModal({ open, onClose }) {
+export default function CredenciaisForm() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
-    if(open){
-        fetchClientes();
-    }
-  }, [open]);
+    fetchClientes();
+  }, []);
 
   const fetchClientes = async () => {
-    try{
-        const {data, error} = await supabase.from("clientes").select("*");
-        if(error) throw error;
-        setClientes(data);
-    }catch (err) {
-        console.error("Erro ao Buscar Clientes", err)
-        message.error("Erro ao Buscar Clientes");
+    try {
+      const { data, error } = await supabase.from("clientes").select("*");
+      if (error) throw error;
+      setClientes(data);
+    } catch (err) {
+      console.error("Erro ao Buscar Clientes", err);
+      message.error("Erro ao Buscar Clientes");
     }
   };
 
@@ -34,21 +34,20 @@ export default function CredenciaisModal({ open, onClose }) {
       const encrypted = await encrypt(
         {
           token: values.token,
-          code_meta: values.code_meta
+          code_meta: values.code_meta,
         },
         process.env.REACT_APP_SECRET_KEY
       );
-  
+
       const payload = {
         cliente: values.cliente,
         token: encrypted.ciphertext,
-        code_meta: encrypted.ciphertext
+        code_meta: encrypted.ciphertext,
       };
-  
+
       await supabase.from("credenciais").insert([payload]);
 
       message.success("Credencial cadastrada com sucesso!");
-      onClose();
       form.resetFields();
     } catch (err) {
       console.error("Erro ao salvar:", err);
@@ -59,22 +58,15 @@ export default function CredenciaisModal({ open, onClose }) {
   };
 
   return (
-    <Modal
-      title="Nova Credencial"
-      open={open}
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      okText="Salvar"
-      cancelText="Cancelar"
-      confirmLoading={loading}
-    >
-      <Form form={form} layout="vertical" onFinish={handleFinish}>
+    <div style={{ maxWidth: 600 }}>
+      <h2 style={{ marginBottom: 20 }}>Adicionar Credencial</h2>
+      <Form layout="vertical" form={form} onFinish={handleFinish}>
         <Form.Item name="cliente" label="Cliente" rules={[{ required: true }]}>
           <Select placeholder="Selecione o Cliente">
-            {clientes.map((clientes) => (
-                <Option key={clientes.id} value={clientes.nome}>
-                    {clientes.nome}
-                </Option>
+            {clientes.map((cliente) => (
+              <Option key={cliente.id} value={cliente.nome}>
+                {cliente.nome}
+              </Option>
             ))}
           </Select>
         </Form.Item>
@@ -84,7 +76,12 @@ export default function CredenciaisModal({ open, onClose }) {
         <Form.Item name="code_meta" label="Code Meta" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            Salvar
+          </Button>
+        </Form.Item>
       </Form>
-    </Modal>
+    </div>
   );
 }

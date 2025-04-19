@@ -6,6 +6,7 @@ import SignIn from "./pages/SignIn";
 import Clientes from "./pages/Clientes";
 import Pagamentos from "./pages/Pagamentos";
 import Main from "./components/layout/Main";
+import configuration from "./pages/configuration";
 import Controle from "./pages/ControleAD";
 import { supabase } from "./services/supabase";
 import "antd/dist/antd.css";
@@ -17,13 +18,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
-const ProtectedRoute = ({ component: Component, isAuthenticated, isLoading, ...rest }) => (
+const ProtectedRoute = ({ component: Component, isAuthenticated, isLoading, noSidebar, ...rest }) => (
   <Route
     {...rest}
     render={(props) =>
       isLoading ? (
         <div className="loading">Verificando autenticação...</div>
       ) : isAuthenticated ? (
+        noSidebar ? (
+          <Component {...props} />
+        ) : 
         <Main>
           <Component {...props} />
         </Main>
@@ -158,6 +162,14 @@ function App() {
           component={Controle} 
           isAuthenticated={isAuthenticated}
           isLoading={isLoading}
+        />
+        <ProtectedRoute 
+        exact 
+        path="/configuration" 
+        component={configuration} 
+        isAuthenticated={isAuthenticated}
+        isLoading={isLoading}
+        noSidebar={true}
         />
         
         <Route path="*">
